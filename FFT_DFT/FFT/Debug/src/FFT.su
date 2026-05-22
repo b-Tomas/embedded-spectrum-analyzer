@@ -1,0 +1,5 @@
+../src/FFT.c:74:23:mul_q15	16	static
+../src/FFT.c:78:13:bit_reverse	40	static
+../src/FFT.c:99:6:init_twiddle	40	static
+../src/FFT.c:130:6:FFT	96	static
+../src/FFT.c:171:5:main	4	static

@@ -33,13 +33,13 @@ ln -s LPC17xx.h lib/CMSISv2p00_LPC17xx/CMSISv2p00_LPC17xx/inc/lpc17xx.h
 
 ## Importar proyectos en MCUXpresso
 
-Click en *File* → *Import* → *General* → *Existing Projects into Workspace* → seleccionar la raiz del repositorio → Marcar la casilla *Search for nested projects* y verificar que tanto `firmware/` como `lib/CMSISv2p00_LPC17xx/CMSISv2p00_LPC17xx/` estén marcados → *Finish*
+Click en *File* > *Import* > *General* > *Existing Projects into Workspace* > seleccionar la raiz del repositorio > Marcar la casilla *Search for nested projects* y verificar que tanto `firmware/` como `lib/CMSISv2p00_LPC17xx/CMSISv2p00_LPC17xx/` estén marcados > *Finish*
 
 Deberían aparecer dos proyectos en el workspace: `spectrum-analyzer` y `CMSISv2p00_LPC17xx`.
 
 ## Configurar referencias del proyecto
 
-1. Click derecho en `spectrum-analyzer` → *Properties* → *Project References*
+1. Click derecho en `spectrum-analyzer` > *Properties* > *Project References*
 2. Asegurar que esté marcada la casilla `CMSISv2p00_LPC17xx`
 3. Aplicar y cerrar
 
@@ -75,9 +75,9 @@ Esto crea un `.clangd` con las paths absolutos.
 
 Para formatear desde el IDE, instalar el plugin [CppStyle](https://marketplace.eclipse.org/content/cppstyle):
 
-1. *Help* → *Eclipse Marketplace* → buscar "CppStyle" → *Install*
-2. *Window* → *Preferences* → *CppStyle* → configurar la ruta a `clang-format` (e.g. `/usr/bin/clang-format`)
-3. *Window* → *Preferences* → *C/C++* → *Code Style* → *Formatter* → seleccionar **CppStyle (clang-format)** como formatter activo
+1. *Help* > *Eclipse Marketplace* > buscar "CppStyle" > *Install*
+2. *Window* > *Preferences* > *CppStyle* > configurar la ruta a `clang-format` (e.g. `/usr/bin/clang-format`)
+3. *Window* > *Preferences* > *C/C++* > *Code Style* > *Formatter* > seleccionar **CppStyle (clang-format)** como formatter activo
 
 El plugin usa el `.clang-format` del proyecto automáticamente. Formatear con `Ctrl+Shift+F` como cualquier otro formatter de Eclipse.
 
@@ -86,5 +86,5 @@ El plugin usa el `.clang-format` del proyecto automáticamente. Formatear con `C
 Si la referencia del proyecto está configurada correctamente, compilar `spectrum-analyzer` debería ser suficiente.
 
 Caso contrario, puede ser necesario compilar `CMSISv2p00_LPC17xx` primero, y luego `spectrum-analyzer`:
-1. Click derecho en `CMSISv2p00_LPC17xx` → Build Project
-2. Click derecho en `spectrum-analyzer` → Build Project
+1. Click derecho en `CMSISv2p00_LPC17xx` > Build Project
+2. Click derecho en `spectrum-analyzer` > Build Project

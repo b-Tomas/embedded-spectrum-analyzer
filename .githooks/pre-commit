@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(c|h)$' || true)
+
+if [ -z "$STAGED" ]; then
+    exit 0
+fi
+
+if ! echo "$STAGED" | xargs clang-format --dry-run --Werror 2>&1; then
+    echo ""
+    echo "Fix with: ./scripts/check-format.sh fix"
+    exit 1
+fi

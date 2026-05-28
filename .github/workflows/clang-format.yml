@@ -1,0 +1,20 @@
+name: clang-format
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - uses: jidicula/clang-format-action@v4.18.0
+        with:
+          clang-format-version: "22"
+          check-path: "firmware"

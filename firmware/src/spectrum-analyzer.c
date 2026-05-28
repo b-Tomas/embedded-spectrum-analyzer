@@ -18,7 +18,6 @@
 #endif
 
 #include <cr_section_macros.h>
-
 #include <stdio.h>
 
 // TODO: insert other include files here
@@ -30,13 +29,13 @@ int main(void) {
     printf("Hello World\n");
 
     // Force the counter to be placed into memory
-    volatile static int i = 0 ;
+    volatile static int i = 0;
     // Enter an infinite loop, just incrementing a counter
-    while(1) {
-        i++ ;
+    while (1) {
+        i++;
         // "Dummy" NOP to allow source level single
         // stepping of tight while() loop
-        __asm volatile ("nop");
+        __asm volatile("nop");
     }
-    return 0 ;
+    return 0;
 }

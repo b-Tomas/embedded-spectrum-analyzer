@@ -2,6 +2,59 @@
 
 [![en documentation](https://img.shields.io/badge/lang-en-orange.svg)](README.md)
 
+Analizador de espectro, ecualizador y filtro de ruido. Consta de distintos modos de uso:
+1. Modo de análisis de espectro en tiempo real con visualización en pantalla y aplicación de filtro guardado.
+2. Modo de muestreo de ruido.
+3. Modo de ecualización manual.
+4. Modo de configuración: aplicar ecualización, filtro de ruido o passthrough.
+
+El cambio de modos se realiza mediante un teclado matricial, así como la interacción en el modo de configuración.
+
+<!-- Insertar gráficos -->
+
+## Modo 1: Análisis de Espectro en Tiempo Real
+
+1. Utilizando GPDMA se copian las muestras de señal del ADC a un doble buffer de procesamiento. El ADC está detras de un amplificador operacional, permitiendo captar sonido con un micrófono pasivo.
+2. El procesador lee el último periodo de muestras del doble buffer y aplica la transformada rápida de Fourier (FFT).
+3. En el espectro de frecuencias se aplica el filtro indicado por el puntero correspondiente.
+4. Utilizando la transformada inversa de Fourier se obtiene la señal resultante y se copia a un buffer de salida.
+5. Un segundo canal del GPDMA emite la señal a través del DAC. La salida del DAC se conecta a un aplificador operacional, permitiendo emitir la señal como sonido con una bocina pasiva.
+6. En paralelo y a una frecuencia menor se visualiza el espectro de frecuencias resultante en una pantalla OLED conectada por I2C.
+
+> [!NOTE]
+>
+> Decidir:
+> - Frecuencia de muestreo
+> - Tamaño de la FFT
+> - Utilización de memoria flash para almacenamiento?
+
+## Modo 2: Modo de muestreo de ruido
+
+1. Utilizando GPDMA se copian las muestras de señal del ADC a un doble buffer de procesamiento.
+2. El procesador lee el último periodo de muestras del doble buffer y aplica la transformada rápida de Fourier (FFT).
+3. El espectro de frecuencias del ruido se almacena como un filtro en la zona de memoria reservada para el filtro de ruido.
+4. El inicio y finalización de la grabación se realiza mediante el teclado.
+
+> [!NOTE]
+>
+> Decidir:
+> - Tomar promedio de la señal de ruido durante la grabación?
+
+## Modo 3: Ecualización
+
+1. El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado.
+2. La configuración se guarda en la zona de memoria reservada para el filtro de ecualización.
+
+> [!NOTE]
+>
+> Decidir:
+> - Definir bandas 
+
+## Modo 4: Configuración
+
+1. Mediante el teclado el usuario selecciona el filtro de ruido a utilizar: el filtro a base del muestro de ruido realizado en modo 2, un filtro de ecualización definido por el usuario o passthrogh.
+2. La selección de modo cambia la estructura de configuración del modo 1 apuntando a la zona de memoria correspondiente con los parámetros adecuados.
+
 # Quickstart
 
 ## Requisitos

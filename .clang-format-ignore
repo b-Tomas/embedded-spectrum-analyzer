@@ -1,0 +1,4 @@
+lib/**
+firmware/src/cr_startup_*.c
+firmware/src/crp.c
+firmware/Debug/**

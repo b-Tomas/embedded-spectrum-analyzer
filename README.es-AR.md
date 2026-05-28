@@ -45,6 +45,32 @@ Deberían aparecer dos proyectos en el workspace: `spectrum-analyzer` y `CMSISv2
 
 Esto asegura que la biblioteca se compile antes que el firmware.
 
+## Configuración para contributors
+
+### Formatter
+
+Activar el hook de pre-commit (una vez por clon):
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Esto bloquea commits con formato incorrecto. Para corregir el formato automáticamente:
+
+```bash
+./scripts/check-format.sh fix
+```
+
+### Integración con MCUXpresso
+
+Para formatear desde el IDE, instalar el plugin [CppStyle](https://marketplace.eclipse.org/content/cppstyle):
+
+1. *Help* → *Eclipse Marketplace* → buscar "CppStyle" → *Install*
+2. *Window* → *Preferences* → *CppStyle* → configurar la ruta a `clang-format` (e.g. `/usr/bin/clang-format`)
+3. *Window* → *Preferences* → *C/C++* → *Code Style* → *Formatter* → seleccionar **CppStyle (clang-format)** como formatter activo
+
+El plugin usa el `.clang-format` del proyecto automáticamente. Formatear con `Ctrl+Shift+F` como cualquier otro formatter de Eclipse.
+
 ## Compilar
 
 Si la referencia del proyecto está configurada correctamente, compilar `spectrum-analyzer` debería ser suficiente.

@@ -1,3 +1,4 @@
 [submodule "lib/CMSISv2p00_LPC17xx"]
 	path = lib/CMSISv2p00_LPC17xx
 	url = https://github.com/David-A-T-M/LPC17xx-CMSIS-Driver-Enhancement.git
+	ignore = dirty

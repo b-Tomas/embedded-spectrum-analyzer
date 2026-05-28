@@ -47,7 +47,7 @@ Esto asegura que la biblioteca se compile antes que el firmware.
 
 ## Configuración para contributors
 
-### Formatter
+### Formatter (clang-format)
 
 Activar el hook de pre-commit (una vez por clon):
 
@@ -60,6 +60,16 @@ Esto bloquea commits con formato incorrecto. Para corregir el formato automátic
 ```bash
 ./scripts/check-format.sh fix
 ```
+
+### LSP (clangd)
+
+Generar la configuración de clangd para autocompletado e include paths (una vez por clon):
+
+```bash
+./scripts/setup-clangd.sh
+```
+
+Esto crea un `.clangd` con las paths absolutos.
 
 ### Integración con MCUXpresso
 

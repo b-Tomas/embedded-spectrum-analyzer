@@ -1,8 +1,6 @@
 #if !defined(ADC_H)
 #define ADC_H
 
-#include "lpc17xx_adc.h"
-
 /* @brief ADC config when mode is in real time.
  */
 void ADC_setRealTimeMode(void);
@@ -11,5 +9,4 @@ void ADC_setRealTimeMode(void);
  */
 void ADC_setNoiseSamplingMode(void);
 
-
-#endif // ADC_H 
+#endif // ADC_H

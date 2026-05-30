@@ -3,18 +3,10 @@
 
 /* @brief Keyboard config when mode is Equalizator mode.
  */
-void KEYBOARD_Mode3Configuration(void);
+void KEYBOARD_setEqualizatorMode(void);
 
 /* @brief Keyboard config when mode is in Configuration mode (filter selecting).
  */
-void KEYBOARD_Mode4Configuration(void);
-
-/* @brief for ensure that config has been run only once
- */
-Bool KEYBOARD_Mode1Configurated(void);
-
-/* @brief for ensure that config has been run only once
- */
-Bool KEYBOARD_Mode4Configurated(void);
+void KEYBOARD_setConfigurationMode(void);
 
 #endif // KEYBOARD_H

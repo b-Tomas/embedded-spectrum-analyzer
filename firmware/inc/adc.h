@@ -5,18 +5,11 @@
 
 /* @brief ADC config when mode is in real time.
  */
-void ADC_Mode1Configuration(void);
+void ADC_setRealTimeMode(void);
 
 /* @brief ADC config when mode is in noise sampling.
  */
-void ADC_Mode2Configuration(void);
+void ADC_setNoiseSamplingMode(void);
 
-/* @brief for ensure that config for real time has been run only once
- */
-Bool ADC_Mode1Configurated(void);
 
-/* @brief for ensure that config for noise sampling has been run only once
- */
-Bool ADC_Mode1Configurated(void);
-
-#endif // ADC_H
+#endif // ADC_H 

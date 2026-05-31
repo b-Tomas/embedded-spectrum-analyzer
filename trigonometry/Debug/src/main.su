@@ -1,0 +1,5 @@
+../src/main.c:10:10:lround_custom	16	static
+../src/main.c:17:6:init_twiddle	24	static
+../src/main.c:25:6:printArray	24	static
+../src/main.c:33:6:printArrayNormalized	24	static
+../src/main.c:42:5:main	8	static

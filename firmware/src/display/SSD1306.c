@@ -5,7 +5,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-framebuffer_t fb;
+/* Double framebuffers to safely draw the next frame while SSD1306_Flush ships the
+ * current one in the background. */
+static framebuffer_t fb_a, fb_b;
+
+/* Pointer to the framebuffer the producer draws into. */
+framebuffer_t* fb = &fb_a;
 
 /* Command order and arguments follow the "Internal setting (Charge pump)" I2C init code in
  * docs/SSD1306/UG-2864HSWEG01 user guide.pdf (Section 7.2, p19).
@@ -43,7 +48,8 @@ void SSD1306_Init() {
     SSD1306_Command(SSD1306_SET_COLUMN_ADDRESS, (uint8_t[]){0x00, 0x7F}, 2); // columns 0..127
     SSD1306_Command(SSD1306_SET_PAGE_ADDRESS, (uint8_t[]){0x00, 0x07}, 2);   // pages 0..7
 
-    fb.ctrl = SSD1306_DATA; // control byte, set once
+    fb_a.ctrl = SSD1306_DATA; // control byte, set once per buffer
+    fb_b.ctrl = SSD1306_DATA;
 }
 
 /* Build the control byte, the opcode, and its argument bytes, and send them as one command-stream
@@ -56,11 +62,21 @@ void SSD1306_Command(ssd1306_cmd_t cmd, const uint8_t* args, uint8_t nargs) {
     for (uint8_t i = 0; i < nargs; i++) {
         buf[2 + i] = args[i];
     }
-    i2c_tx(buf, 2 + nargs, SSD1306_ADDR);
+    i2c_tx_sync(buf, 2 + nargs, SSD1306_ADDR);
 }
 
-/* fb starts with the data control byte and is stored contiguously (see framebuffer_t), so the whole
- * struct goes out as a single I2C buffer. */
+/* Each framebuffer starts with the data control byte and is stored contiguously (see
+ * framebuffer_t), so the whole struct goes out as a single I2C buffer.
+ *
+ * The flush hands the just-drawn buffer to the background transfer and flips fb to the other
+ * buffer for the next frame. If the previous transfer is still running it does nothing and the
+ * producer keeps drawing into the same buffer. A buffer only returns to the producer once its
+ * transfer has finished, so the producer never writes a buffer that is still being sent. */
 void SSD1306_Flush(void) {
-    i2c_tx((uint8_t*)&fb, sizeof(fb), SSD1306_ADDR);
+    if (i2c_busy()) {
+        return;
+    }
+    framebuffer_t* sent = fb;
+    fb = (fb == &fb_a) ? &fb_b : &fb_a;
+    i2c_tx_async((uint8_t*)sent, sizeof(*sent), SSD1306_ADDR);
 }

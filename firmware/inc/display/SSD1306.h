@@ -20,8 +20,9 @@ typedef struct {
     uint8_t px[OLED_PAGES][OLED_WIDTH];
 } framebuffer_t;
 
-// Frame buffer for the display
-extern framebuffer_t fb;
+// Frame buffer the producer draws into. SSD1306_Flush repoints this between two internal
+// buffers so a flush can run in the background while the next frame is drawn.
+extern framebuffer_t* fb;
 
 /* Command opcodes from the SSD1306 datasheet, grouped as in its command table (Table 9-1).
  * Where a command has two opcodes each opcode gets its own value.
@@ -220,6 +221,10 @@ void SSD1306_Init(void);
 void SSD1306_Command(ssd1306_cmd_t cmd, const uint8_t* args, uint8_t nargs);
 
 /**
- * @brief Send the entire framebuffer (fb) to the panel in one I2C transaction.
+ * @brief Start sending the current framebuffer (fb) to the panel in one I2C transaction.
+ *
+ * Non-blocking: the transfer runs in the background under interrupt and fb is repointed to a
+ * free buffer for the next frame. If the previous flush is still in flight this does nothing,
+ * leaving fb unchanged so the producer can keep drawing into it.
  */
 void SSD1306_Flush(void);

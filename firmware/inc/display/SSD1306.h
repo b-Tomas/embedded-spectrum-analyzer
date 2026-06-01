@@ -16,7 +16,7 @@
 
 /**
  * Framebuffer data. Each byte holds 8 vertical pixels where the LSb is the topmost pixel.
- * The total screen area is covered by 128 pages of 8 bytes each, 64 pixes per page.
+ * The total screen area is covered by 8 pages of 128 bytes each, 1024 pixels per page.
  *
  * Intuitively, addressing works the following way: in px[row][col] `col` maps to a display column
  * (x coordinate) and `row` selects 8 pixels counting from top to bottom.
@@ -34,7 +34,6 @@ typedef uint8_t framebufferData_t[OLED_PAGES][OLED_WIDTH];
  * Frame buffer laid out for a single I2C burst: control byte first, then the
  * pixel pages.
  *
- * 8 vertical
  * px[page][col] holds 8 vertical pixels where the LSb is the topmost pixel. */
 typedef struct {
     uint8_t ctrl;

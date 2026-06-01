@@ -8,12 +8,12 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 /**
- * The 128x64 persistent canvas this module draws onto. It has the same format (packed) of
- * the @link fb->px (data) field for easy @link memcpy on each @link display_displayCanvas call,
+ * The 128x64 persistent canvas this module draws onto. It has the same format (packed) as
+ * the `fb->px` (data) field for easy memcpy on each @ref display_displayCanvas call,
  * efficient for ticked engines.
- * Drawing has the overhead of translating from unpacked @link Image data into the packed format
+ * Drawing has the overhead of translating from unpacked @ref Image data into the packed format
  *
- * Refer to @link framebufferData_t to understand the pixel addressing
+ * Refer to @ref framebufferData_t to understand the pixel addressing
  */
 static framebufferData_t canvas;
 

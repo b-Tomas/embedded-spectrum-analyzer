@@ -10,14 +10,35 @@
 #define SSD1306_CMD  0x00 /**< Control byte: command stream. */
 #define SSD1306_DATA 0x40 /**< Control byte: data stream. */
 
-#define OLED_WIDTH 128
-#define OLED_PAGES 8 /**< 128x64 panel -> 8 pages of 8 rows. */
+#define OLED_WIDTH  128
+#define OLED_HEIGHT 64
+#define OLED_PAGES  8 /**< 128x64 panel -> 8 pages of 8 rows. */
 
-/* Frame buffer laid out for a single I2C burst: control byte first, then the
- * pixel pages. px[page][col] holds 8 vertical pixels where the LSb is the topmost pixel. */
+/**
+ * Framebuffer data. Each byte holds 8 vertical pixels where the LSb is the topmost pixel.
+ * The total screen area is covered by 128 pages of 8 bytes each, 64 pixes per page.
+ *
+ * Intuitively, addressing works the following way: in px[row][col] `col` maps to a display column
+ * (x coordinate) and `row` selects 8 pixels counting from top to bottom.
+ *
+ * An (x, y) pixel with origin in the top-left corner is controlled via:
+ * - px[y >> 3][x] |= 1U << (y & 0b111);  // ON
+ * - px[y >> 3][x] &= ~(1U << (y & 0b111));  // OFF
+ * Explanation:
+ * - y >> 3: divide by 8
+ * - 1U << (y & 0b111): set the bit corresponding to the remainder of the integer division y//8
+ */
+typedef uint8_t framebufferData_t[OLED_PAGES][OLED_WIDTH];
+
+/**
+ * Frame buffer laid out for a single I2C burst: control byte first, then the
+ * pixel pages.
+ *
+ * 8 vertical
+ * px[page][col] holds 8 vertical pixels where the LSb is the topmost pixel. */
 typedef struct {
     uint8_t ctrl;
-    uint8_t px[OLED_PAGES][OLED_WIDTH];
+    framebufferData_t px;
 } framebuffer_t;
 
 // Frame buffer the producer draws into. SSD1306_Flush repoints this between two internal

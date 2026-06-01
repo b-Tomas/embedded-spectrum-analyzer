@@ -1,41 +1,30 @@
-/*
- * Copyright 2022 NXP
- * NXP confidential.
- * This software is owned or controlled by NXP and may only be used strictly
- * in accordance with the applicable license terms.  By expressly accepting
- * such terms or by downloading, installing, activating and/or otherwise using
- * the software, you are agreeing that you have read, and that you agree to
- * comply with and are bound by, such license terms.  If you do not agree to
- * be bound by the applicable license terms, then you may not retain, install,
- * activate or otherwise use the software.
- */
+#include "display/SSD1306.h"
 
-#ifdef __USE_CMSIS
-#include "LPC17xx.h"
-#include "lpc17xx_adc.h"
-#include "lpc17xx_dac.h"
-#include "lpc17xx_gpdma.h"
-#endif
+#include <stdint.h>
 
-#include <cr_section_macros.h>
-#include <stdio.h>
+/* --------------------------------- setup ---------------------------------- */
+void setup(void) {
+    SSD1306_Init();
+}
 
-// TODO: insert other include files here
-
-// TODO: insert other definitions and declarations here
+#define BAR_WIDTH 8 /**< Width of the sweeping demo bar, in pixels. */
 
 int main(void) {
+    setup();
 
-    printf("Hello World\n");
-
-    // Force the counter to be placed into memory
-    volatile static int i = 0;
-    // Enter an infinite loop, just incrementing a counter
+    uint32_t x = 0;
     while (1) {
-        i++;
-        // "Dummy" NOP to allow source level single
-        // stepping of tight while() loop
-        __asm volatile("nop");
+        // Full-height vertical bar at column x, wrapping at the right edge.
+        for (uint32_t col = 0; col < OLED_WIDTH; col++) {
+            uint8_t on = ((col - x) % OLED_WIDTH) < BAR_WIDTH ? 0xFF : 0x00;
+            for (uint32_t page = 0; page < OLED_PAGES; page++) {
+                fb.px[page][col] = on;
+            }
+        }
+        SSD1306_Flush();
+        if (++x >= OLED_WIDTH) {
+            x = 0;
+        }
     }
     return 0;
 }

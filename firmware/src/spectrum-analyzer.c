@@ -10,12 +10,12 @@
  * activate or otherwise use the software.
  */
 
-#ifdef __USE_CMSIS
+
 #include "LPC17xx.h"
-#include "lpc17xx_adc.h"
-#include "lpc17xx_dac.h"
-#include "lpc17xx_gpdma.h"
-#endif
+#include "core_cmInstr.h"
+#include "lpc_types.h"
+#include "system.h"
+
 
 #include <cr_section_macros.h>
 #include <stdio.h>
@@ -25,10 +25,39 @@
 // TODO: insert other definitions and declarations here
 
 int main(void) {
-    // TODO: real application entry point. For now this build runs the display
-    // integration test suite on a loop (see src/test/it_display.c).
-    while (true) {
-        it_run_all();
+
+    systemInit(realTimeMode);
+
+    while (TRUE) {
+
+        __WFI();
+        switch (SYSTEM.mode) {
+        case realTimeMode:
+            if (!SYSTEM.flag_ModeRunned) {
+                configRealTimeMode();
+                SYSTEM.flag_ModeRunned = SET;
+            }
+            // TODO: State implementation.
+            break;
+
+        case noiseSamplingMode:
+            if (!SYSTEM.flag_ModeRunned) {
+                configNoiseSamplingMode();
+                SYSTEM.flag_ModeRunned = SET;
+            }
+
+            // TODO: State implementation.
+            break;
+
+        case equalizerMode:
+            if (!SYSTEM.flag_ModeRunned) {
+                configEqualizerMode();
+                SYSTEM.flag_ModeRunned = SET;
+            }
+
+            // TODO: State implementation.
+            break;
+        }
     }
 
     return 0;

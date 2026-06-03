@@ -22,7 +22,7 @@ void configEqualizerMode(void) {
 }
 
 void executeRealTimeMode(void) {
-    // TODO:Real time mode implementation. 
+    // TODO:Real time mode implementation.
 }
 
 void executeNoiseSamplingMode(void) {
@@ -30,7 +30,7 @@ void executeNoiseSamplingMode(void) {
 }
 
 void executeEqualizerMode(void) {
-    // TODO: Equalizer mode implementation. 
+    // TODO: Equalizer mode implementation.
 }
 
 void changeEqualizer(const uint32_t* newEQBands) {

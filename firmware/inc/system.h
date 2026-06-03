@@ -2,90 +2,120 @@
 
 #include "lpc_types.h"
 
-#define CRUDE_SIGNAL "Memory Address where the signal is loaded" // Memory Address where the signal is loaded
-#define PROCECED_SIGNAL "Memory Address where the signal is loaded after the filter" // Memory Address where the signal is loaded after the filter
-#define MAX_BAND 10 // Number of equalizer bands. 
+/**
+ * @brief Memory address where the signal is loaded.
+ */
+extern uint32_t CRUDE_SIGNAL;
 
+/**
+ * @brief Memory address where the signal is loaded after the filter.
+ */
+extern uint32_t PROCESSED_SIGNAL;
+
+#define MAX_BAND 10
+/**
+ * @brief Available operation modes for the system.
+ */
 typedef enum {
     realTimeMode,
     noiseSamplingMode,
     equalizerMode,
 } Mode;
 
-typedef struct {
-    Mode mode;
-    Mode previousMode;
-    FlagStatus flag_ModeRunned;
+/**
+ * @brief Possible filters that can be applied to modify the signal.
+ */
+typedef enum {
+    passthrough,
+    noiseSuppression,
+    customEqualized,
+} Filter;
 
+/**
+ * @brief The orchestrator struct.
+ * @details Contains de state variabes.
+ * @note flag_ModeExecuted is used in the sate machine.
+ */
+typedef struct {
+    Mode mode;                    /**< Current operational mode. */
+    Mode previousMode;            /**< Previous operational mode. */
+    FlagStatus flag_ModeExecuted; /**< Flag to prevent re-configuration */
+    Filter filter;                /**< Active signal filter. */
 } System;
 
-/* @brief The orchestrator
+/**
+ * @brief Global orchestrator instance.
  */
 extern System SYSTEM;
 
-typedef enum {
-    passthrogh,
-    noiseSupression,
-    customEqualized,
-} Filer;
-
-/*  @brief the values of every band.
- * used on
+/**
+ * @brief Current gains values for eachequalizer band.
+ * @details The gains is in decibels.
  */
 extern uint32_t EQUALIZER[MAX_BAND];
 
-/*@brief System init
+/**
+ * @brief System init.
  * @param mode The mode in which system inits.
  */
 void systemInit(Mode mode);
 
-/* @brief System config for real time mode.
- * - Config the peripherals whose beheivor needs to changed due to the new mode.
- * - Applies the appropriate filter
+/**
+ * @brief System config for real time mode.
+ * @details
+ * - Configures the peripherals whose behaivor needs to be changed due to the new mode.
+ * - Applies the appropriate filter.
  */
 void configRealTimeMode(void);
 
-/* @brief System config for noise sampling mode.
- * - Config the peripherals whose beheivor needs to changed due to the new mode.
+/**
+ * @brief System config for noise sampling mode.
+ * @details Configures the peripherals whose behaivor needs to be changed due to the new mode.
  */
 void configNoiseSamplingMode(void);
 
-/* @brief System config for equalizer mode.
- * - Config the peripherals whose beheivor needs to changed due to the new mode.
+/**
+ * @brief System config for equalizer mode.
+ * @details
+ * - Configures the peripherals whose behavior needs to be changed due to the new mode.
  * - Disable the triggers for other modes.
  */
 void configEqualizerMode(void);
 
-///* @brief Función que ejecuta a la señal obtenida el filtro seleccionado.
-// *
-// */
-// void executeFiler();
-
-/* @brief rewrite EQUALIZER.
- * @param newBrands MAX_BRAND size array that cointains the new EQ values.
+/**
+ * @brief rewrite EQUALIZER.
+ * @param newBrands MAX_BRAND size array that contains the new EQ values.
  */
-void changeEqualizer(const uint32_t* newBrands);
+void changeEqualizer(const uint32_t* newEQBands);
 
 //=================================================================
 // Getters y Setters
 //=================================================================
 
-/* @brief Set a new mode.
+/**
+ * @brief Sets a new operational mode.
  * @param mode the new mode.
  */
 void setMode(Mode mode);
 
-/* @brief Get the previous mode.
- * @ return Mode the previous mode.
+/**
+ * @brief Gets the previous mode.
+ * @return Mode the previous mode.
  */
-Mode getPreviousMode();
+Mode getPreviousMode(void);
 
-/* @brief set the before mode value into the current.
+/**
+ * @brief Sets the current mode to the previous mode.
  */
 void setPreviousMode(void);
 
-/* @brief Select one of the filters,
- * @param filter The new filter.
+/**
+ * @brief Selects one of the filters.
+ * @param filter The new filter to be applied.
  */
-void setFilter(Filer filter);
- 
+void setFilter(Filter filter);
+
+/**
+ * @brief Clear the filter.
+ */
+void clearFilter(void);

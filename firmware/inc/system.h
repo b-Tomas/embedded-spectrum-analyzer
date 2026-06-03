@@ -12,6 +12,9 @@ extern uint32_t CRUDE_SIGNAL;
  */
 extern uint32_t PROCESSED_SIGNAL;
 
+/**
+ * @brief Numbers of frequency bands for the equalizer.
+ */
 #define MAX_BAND 10
 /**
  * @brief Available operation modes for the system.

@@ -37,7 +37,7 @@ int main(void) {
                 configRealTimeMode();
                 SYSTEM.flag_ModeExecuted = SET;
             }
-            
+
             // TODO: State implementation.
             break;
 

@@ -17,13 +17,14 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
       | 7 | 8 | 9 | C |
       | * | 0 | # | D |
 ``` 
+
 Comportamiento del teclado
   A: Cambia a Modo 1: Análisis del Espectro en Tiempo Real. 
   B: Cambia a Modo 2: Muestreo de ruido. 
   C: Cambia entre el Modo 3: Equalizador y el modo anterior a este. 
   *: Aplica el filtro 1: passtrogh
   #: Aplica el filtro 2: Suprime el ruido eléctrico. 
-  D: Aplica el filtro 3: Equalización 
+  D: Aplica el filtro 3: Equalización
 
 > [!NOTE]
 >
@@ -70,9 +71,6 @@ Comportamiento del teclado
 
 > [!NOTE]
 > - Definir bandas 
-
-
-# Quickstart
 
 ## Requisitos
 

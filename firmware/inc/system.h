@@ -86,6 +86,25 @@ void configNoiseSamplingMode(void);
 void configEqualizerMode(void);
 
 /**
+ * @brief The implementation of the real time mode.
+ * @details Process the signal and transfer it to the peripherals by DMA
+ */
+void executeRealTimeMode(void);
+
+/**
+ * @brief The implementation of the noise sampling mode.
+ * @details Process the signal and saves it for use as noise-suppression filter
+ */
+void executeNoiseSamplingMode(void);
+
+/**
+ * @brief The implementation of the equalizer mode.
+ * @details UI experience to configure the gains bands
+ * @note Must update EQUALIZER.
+ */
+void executeEqualizerMode(void);
+
+/**
  * @brief rewrite EQUALIZER.
  * @param newBrands MAX_BRAND size array that contains the new EQ values.
  */

@@ -21,6 +21,18 @@ void configEqualizerMode(void) {
     // TODO: KEYBOARD re-config, ADC-stop? GPDMA-reconfig (select filer), DISPLAY re-config
 }
 
+void executeRealTimeMode(void) {
+    // TODO:Real time mode implementation. 
+}
+
+void executeNoiseSamplingMode(void) {
+    // TODO: Noise-Sampling mode implementation
+}
+
+void executeEqualizerMode(void) {
+    // TODO: Equalizer mode implementation. 
+}
+
 void changeEqualizer(const uint32_t* newEQBands) {
     // TODO: rewrite the EQUALIZER with the array that cointains the new EQ values.
 }

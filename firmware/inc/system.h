@@ -3,21 +3,6 @@
 #include "lpc_types.h"
 
 /**
- * @brief Memory address where the signal is loaded.
- */
-extern uint32_t CRUDE_SIGNAL;
-
-/**
- * @brief Memory address where the signal is loaded after the filter.
- */
-extern uint32_t PROCESSED_SIGNAL;
-
-/**
- * @brief Numbers of frequency bands for the equalizer.
- */
-#define MAX_BAND 10
-
-/**
  * @brief Available operation modes for the system.
  */
 typedef enum {
@@ -50,12 +35,6 @@ typedef struct {
  * @brief Global orchestrator instance.
  */
 extern System SYSTEM;
-
-/**
- * @brief Current gains values for eachequalizer band.
- * @details The gains is in decibels.
- */
-extern uint32_t EQUALIZER[MAX_BAND];
 
 /**
  * @brief System init.
@@ -103,12 +82,6 @@ void executeNoiseSamplingMode(void);
  * @note Must update EQUALIZER.
  */
 void executeEqualizerMode(void);
-
-/**
- * @brief rewrite EQUALIZER.
- * @param newBrands MAX_BRAND size array that contains the new EQ values.
- */
-void changeEqualizer(const uint32_t* newEQBands);
 
 //=================================================================
 // Getters y Setters

@@ -39,10 +39,6 @@ void executeEqualizerMode(void) {
     // TODO: Equalizer mode implementation.
 }
 
-void changeEqualizer(const uint32_t* newEQBands) {
-    // TODO: rewrite the EQUALIZER with the array that cointains the new EQ values.
-}
-
 //=================================================================
 // Getters y Setters
 //=================================================================

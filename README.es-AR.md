@@ -6,9 +6,33 @@ Analizador de espectro, ecualizador y filtro de ruido. Consta de distintos modos
 1. Modo de análisis de espectro en tiempo real con visualización en pantalla y aplicación de filtro guardado.
 2. Modo de muestreo de ruido.
 3. Modo de ecualización manual.
-4. Modo de configuración: aplicar ecualización, filtro de ruido o passthrough.
+
 
 El cambio de modos se realiza mediante un teclado matricial, así como la interacción en el modo de configuración.
+
+```
+      Layout
+      | 1 | 2 | 3 | A |
+      | 4 | 5 | 6 | B |
+      | 7 | 8 | 9 | C |
+      | * | 0 | # | D |
+``` 
+
+Comportamiento del teclado
+  A: Cambia a Modo 1: Análisis del Espectro en Tiempo Real. 
+  B: Cambia a Modo 2: Muestreo de ruido. 
+  C: Cambia entre el Modo 3: Equalizador y el modo anterior a este. 
+  *: Aplica el filtro 1: passtrogh
+  #: Aplica el filtro 2: Suprime el ruido eléctrico. 
+  D: Aplica el filtro 3: Equalización
+
+> [!NOTE]
+>
+> El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado (en decibeles).
+>
+> Por cada banda puede atenuar como minimo -12 DB y amplificar como máxio 12 DB. Como el rango de frecuencias es de 0-16 kHz tomamos 10 bandas : 
+>
+> 31.5 Hz – 63 Hz – 125 Hz – 250 Hz – 500 Hz – 1 kHz – 2 Hz – 4 kHz – 8 kHz – 16 kHz.
 
 <!-- Insertar gráficos -->
 
@@ -46,16 +70,7 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
 2. La configuración se guarda en la zona de memoria reservada para el filtro de ecualización.
 
 > [!NOTE]
->
-> Decidir:
 > - Definir bandas 
-
-## Modo 4: Configuración
-
-1. Mediante el teclado el usuario selecciona el filtro de ruido a utilizar: el filtro a base del muestro de ruido realizado en modo 2, un filtro de ecualización definido por el usuario o passthrogh.
-2. La selección de modo cambia la estructura de configuración del modo 1 apuntando a la zona de memoria correspondiente con los parámetros adecuados.
-
-# Quickstart
 
 ## Requisitos
 

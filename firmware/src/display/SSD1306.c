@@ -29,6 +29,8 @@ void SSD1306_Init() {
     SSD1306_Command(SSD1306_SET_DISPLAY_START_LINE, NULL, 0); // line 0
     SSD1306_Command(SSD1306_SET_CONTRAST, (uint8_t[]){0xCF}, 1);
     SSD1306_Command(SSD1306_SEGMENT_REMAP_COL127, NULL, 0);
+    // Flip the image vertically. Origin of the pixel coordinates is the top-left corner
+    SSD1306_Command(SSD1306_COM_SCAN_REVERSE, NULL, 0);
     SSD1306_Command(SSD1306_NORMAL_DISPLAY, NULL, 0);
     SSD1306_Command(SSD1306_SET_MULTIPLEX_RATIO, (uint8_t[]){0x3F},
                     1); // 1/64 duty, all 64 rows active

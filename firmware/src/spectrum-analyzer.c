@@ -1,15 +1,23 @@
-
 #include "LPC17xx.h"
 #include "lpc_types.h"
 #include "system.h"
+#include "test/it.h"
 
 #include <stdbool.h>
 
+// Uncomment the line below to run all integration tests
+// TODO(b-Tomas): find a cleaner way to run tests
+// #define RUN_TESTS
+
 int main(void) {
+#ifdef RUN_TESTS
+    it_run_all();
+#endif
 
     systemInit(realTimeMode);
 
-    while (TRUE) {
+    // ReSharper disable once CppDFAEndlessLoop
+    while (true) {
 
         __WFI();
         switch (SYSTEM.mode) {

@@ -3,10 +3,11 @@
 #include "LPC17xx.h"
 #include "test/display/it_SSD1306.h"
 #include "test/display/it_display.h"
+#include "test/display/it_gfx.h"
 
 #include <stdio.h>
 
-void it_delay(void) {
+void it_delay() {
     for (volatile int i = 0; i < 100000; i++) {
         __NOP();
     }
@@ -24,6 +25,9 @@ void it_run_all(void) {
     it_display_setup();
     it_SSD1306_run();
     it_display_run();
+
+    /* Graphics engine */
+    it_gfx_bars_run();
 
     /* TODO(b-Tomas): Add other subsystems as they are implemented. */
 

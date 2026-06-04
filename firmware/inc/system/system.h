@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lpc_types.h"
+#include "signal-processing/filter.h"
 
 /**
  * @brief Available operation modes for the system.
@@ -10,15 +11,6 @@ typedef enum {
     noiseSamplingMode,
     equalizerMode,
 } Mode;
-
-/**
- * @brief Possible filters that can be applied to modify the signal.
- */
-typedef enum {
-    passthrough,
-    noiseSuppression,
-    customEqualized,
-} Filter;
 
 /**
  * @brief The orchestrator struct.
@@ -92,14 +84,3 @@ void executeEqualizerMode(void);
  * @param mode the new mode.
  */
 void setMode(Mode mode);
-
-/**
- * @brief Selects one of the filters.
- * @param filter The new filter to be applied.
- */
-void setFilter(Filter filter);
-
-/**
- * @brief Clear the filter.
- */
-void clearFilter(void);

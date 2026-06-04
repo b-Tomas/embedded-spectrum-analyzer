@@ -1,42 +1,59 @@
-/*
- * Copyright 2022 NXP
- * NXP confidential.
- * This software is owned or controlled by NXP and may only be used strictly
- * in accordance with the applicable license terms.  By expressly accepting
- * such terms or by downloading, installing, activating and/or otherwise using
- * the software, you are agreeing that you have read, and that you agree to
- * comply with and are bound by, such license terms.  If you do not agree to
- * be bound by the applicable license terms, then you may not retain, install,
- * activate or otherwise use the software.
- */
-
-#ifdef __USE_CMSIS
 #include "LPC17xx.h"
 #include "lpc17xx_adc.h"
 #include "lpc17xx_dac.h"
 #include "lpc17xx_gpdma.h"
 #include "fft.h"
-#endif
+#include "lpc_types.h"
+#include "system.h"
+#include "test/it.h"
 
-#include <cr_section_macros.h>
-#include <stdio.h>
+#include <stdbool.h>
 
-// TODO: insert other include files here
-
-// TODO: insert other definitions and declarations here
+// Uncomment the line below to run all integration tests
+// TODO(b-Tomas): find a cleaner way to run tests
+// #define RUN_TESTS
 
 int main(void) {
+#ifdef RUN_TESTS
+    it_run_all();
+#endif
 
-    printf("Hello World\n");
+    systemInit(realTimeMode);
 
-    // Force the counter to be placed into memory
-    volatile static int i = 0;
-    // Enter an infinite loop, just incrementing a counter
-    while (1) {
-        i++;
-        // "Dummy" NOP to allow source level single
-        // stepping of tight while() loop
-        __asm volatile("nop");
+    // ReSharper disable once CppDFAEndlessLoop
+    while (true) {
+
+        __WFI();
+        switch (SYSTEM.mode) {
+        case realTimeMode:
+            if (!SYSTEM.flag_ModeConfigured) {
+                configRealTimeMode();
+                SYSTEM.flag_ModeConfigured = SET;
+            }
+
+            executeRealTimeMode();
+
+            break;
+
+        case noiseSamplingMode:
+            if (!SYSTEM.flag_ModeConfigured) {
+                SYSTEM.flag_ModeConfigured = SET;
+                configNoiseSamplingMode();
+                executeNoiseSamplingMode();
+            }
+
+            break;
+
+        case equalizerMode:
+            if (!SYSTEM.flag_ModeConfigured) {
+                SYSTEM.flag_ModeConfigured = SET;
+                configEqualizerMode();
+                executeEqualizerMode();
+            }
+
+            break;
+        }
     }
+
     return 0;
 }

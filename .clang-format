@@ -19,3 +19,9 @@ SortIncludes: CaseSensitive
 
 AlignConsecutiveMacros: Consecutive
 AlignEscapedNewlines: Left
+
+# Reformatea comentarios para respetar ColumnLimit
+ReflowComments: true
+
+# Reconoce comandos especiales como \brief, \param, etc. para no romperlos
+CommentPragmas: '^\\.+'

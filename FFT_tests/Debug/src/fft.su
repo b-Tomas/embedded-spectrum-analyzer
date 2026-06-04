@@ -1,0 +1,7 @@
+../src/fft.c:200:23:mul_q15	40	static
+../src/fft.c:205:13:bit_reverse	40	static
+../src/fft.c:225:6:FFT	96	static
+../src/fft.c:269:6:IFFT	96	static
+../src/fft.c:325:6:buildFilter	40	static
+../src/fft.c:337:6:applyFilter	40	static
+../src/fft.c:347:6:substractArraysFrec	24	static

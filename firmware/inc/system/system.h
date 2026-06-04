@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lpc_types.h"
-#include "signal-processing/filter.h"
+#include "signal-processing/filter/filter.h"
 
 /**
  * @brief Available operation modes for the system.

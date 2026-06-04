@@ -2,7 +2,7 @@
 
 #include "lpc17xx_adc.h"
 #include "lpc_types.h"
-#include "signal-processing/equalizer.h"
+#include "signal-processing/filter/equalizer.h"
 
 #include <stdbool.h>
 
@@ -34,7 +34,7 @@ void executeRealTimeMode(void) {
 
     /**    if (input buffer not filled) return;
      *    - Apply Fourier Transform.
-     *    - Aplly filter. exectuteFilter();
+     *    - Aplly filter. filter_exectuteFilter();
      *    - Apply inverse Fourier Transform.
      *    DISCUSS:Indirect? transfers the fullied signal to DAC and displays.
      */

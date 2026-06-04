@@ -1,11 +1,9 @@
 #include "display/display.h"
 
 #include "display/SSD1306.h"
+#include "lpc_types.h"
 
 #include <string.h>
-
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 /**
  * The 128x64 persistent canvas this module draws onto. It has the same format (packed) as
@@ -83,6 +81,19 @@ void display_imageInvert(Image const invertMask) {
              x++) {
             if (invertMask.data[(y - invertMask.y) * invertMask.w + (x - invertMask.x)] != OFF) {
                 CANVAS_BYTE(x, y) ^= CANVAS_MASK(y);
+            }
+        }
+    }
+}
+
+void display_drawRect(uint8_t const x1, const uint8_t y1, const uint8_t x2, const uint8_t y2,
+                      const PixelValue value) {
+    for (int y = y1; y < MIN(DISPLAY_HEIGHT, y2); y++) {
+        for (int x = x1; x < MIN(DISPLAY_WIDTH, x2); x++) {
+            if (value == ON) {
+                CANVAS_BYTE(x, y) |= CANVAS_MASK(y);
+            } else {
+                CANVAS_BYTE(x, y) &= ~CANVAS_MASK(y);
             }
         }
     }

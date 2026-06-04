@@ -36,7 +36,7 @@ typedef enum { OFF = 0, ON = !OFF } PixelValue;
  * An image to draw as an unpacked 1px per byte matrix
  */
 typedef struct {
-    const PixelValue* data;
+    PixelValue* data;
     uint8_t w, h, x, y;
 } Image;
 
@@ -79,3 +79,14 @@ void display_imageClear(Image clearMask);
  * @brief toggle the pixel state of pixels that map to 1's on the canvas
  */
 void display_imageInvert(Image invertMask);
+
+/**
+ * @brief Draw a rectangle on the canvas
+ *
+ * @param x1 top-left horizontal coordinate of the rectangle
+ * @param y1 top-left vertical coordinate of the rectangle
+ * @param x2 top-right horizontal coordinate of the rectangle
+ * @param y2 top-right vertical coordinate of the rectangle
+ * @param value value to give the pixels within the rectangle
+ */
+void display_drawRect(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, PixelValue value);

@@ -1,6 +1,6 @@
 #include "LPC17xx.h"
 #include "lpc_types.h"
-#include "system.h"
+#include "system/system.h"
 #include "test/it.h"
 
 #include <stdbool.h>

@@ -5,6 +5,7 @@
 #pragma once
 #include <stdint.h>
 
+// TODO(b-Tomas): wire with some global value for the amount of bands to show
 #define N_BARS 10
 
 /**

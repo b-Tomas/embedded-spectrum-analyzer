@@ -1,8 +1,9 @@
-#pragma once
-
 #include "system.h"
 
 #include "lpc_types.h"
+
+/** @brief Global orchestrator instance. */
+System SYSTEM;
 
 void systemInit(Mode mode) {
     setMode(mode);

@@ -5,7 +5,7 @@
 #include "lpc_types.h"
 
 void systemInit(Mode mode) {
-    SYSTEM.mode = mode;
+    setMode(mode);
     // TODO: Call all the default peripheral config.
 }
 
@@ -43,22 +43,13 @@ void changeEqualizer(const uint32_t* newEQBands) {
 
 void setMode(Mode mode) {
     SYSTEM.mode = mode;
-    SYSTEM.flag_ModeExecuted = RESET;
-}
-
-Mode getPreviousMode() {
-    return SYSTEM.previousMode;
-}
-
-void setPreviousMode(void) {
-    SYSTEM.mode = SYSTEM.previousMode;
-    SYSTEM.flag_ModeExecuted = RESET;
-    return;
+    SYSTEM.flag_ModeConfigured = RESET;
 }
 
 void setFilter(Filter filter) {
     SYSTEM.filter = filter;
 }
+
 void clearFilter(void) {
     setFilter(passthrough);
 }

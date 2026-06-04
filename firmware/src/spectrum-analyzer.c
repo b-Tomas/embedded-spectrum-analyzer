@@ -14,30 +14,31 @@ int main(void) {
         __WFI();
         switch (SYSTEM.mode) {
         case realTimeMode:
-            if (!SYSTEM.flag_ModeExecuted) {
+            if (!SYSTEM.flag_ModeConfigured) {
                 configRealTimeMode();
-                SYSTEM.flag_ModeExecuted = SET;
+                SYSTEM.flag_ModeConfigured = SET;
             }
 
-            // TODO: State implementation.
+            executeRealTimeMode();
+
             break;
 
         case noiseSamplingMode:
-            if (!SYSTEM.flag_ModeExecuted) {
+            if (!SYSTEM.flag_ModeConfigured) {
+                SYSTEM.flag_ModeConfigured = SET;
                 configNoiseSamplingMode();
-                SYSTEM.flag_ModeExecuted = SET;
+                executeNoiseSamplingMode();
             }
 
-            // TODO: State implementation.
             break;
 
         case equalizerMode:
-            if (!SYSTEM.flag_ModeExecuted) {
+            if (!SYSTEM.flag_ModeConfigured) {
+                SYSTEM.flag_ModeConfigured = SET;
                 configEqualizerMode();
-                SYSTEM.flag_ModeExecuted = SET;
+                executeEqualizerMode();
             }
 
-            // TODO: State implementation.
             break;
         }
     }

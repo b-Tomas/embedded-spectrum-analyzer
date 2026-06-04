@@ -16,6 +16,7 @@ extern uint32_t PROCESSED_SIGNAL;
  * @brief Numbers of frequency bands for the equalizer.
  */
 #define MAX_BAND 10
+
 /**
  * @brief Available operation modes for the system.
  */
@@ -40,10 +41,9 @@ typedef enum {
  * @note flag_ModeExecuted is used in the sate machine.
  */
 typedef struct {
-    Mode mode;                    /**< Current operational mode. */
-    Mode previousMode;            /**< Previous operational mode. */
-    FlagStatus flag_ModeExecuted; /**< Flag to prevent re-configuration */
-    Filter filter;                /**< Active signal filter. */
+    Mode mode;                      /**< Current operational mode. */
+    FlagStatus flag_ModeConfigured; /**< Flag to prevent re-configuration */
+    Filter filter;                  /**< Active signal filter. */
 } System;
 
 /**
@@ -119,17 +119,6 @@ void changeEqualizer(const uint32_t* newEQBands);
  * @param mode the new mode.
  */
 void setMode(Mode mode);
-
-/**
- * @brief Gets the previous mode.
- * @return Mode the previous mode.
- */
-Mode getPreviousMode(void);
-
-/**
- * @brief Sets the current mode to the previous mode.
- */
-void setPreviousMode(void);
 
 /**
  * @brief Selects one of the filters.

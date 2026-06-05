@@ -1,8 +1,8 @@
 #include "system/system.h"
 
+#include "digital-signal-processing/filter/equalizer.h"
 #include "lpc17xx_adc.h"
 #include "lpc_types.h"
-#include "digital-signal-processing/filter/equalizer.h"
 
 #include <stdbool.h>
 

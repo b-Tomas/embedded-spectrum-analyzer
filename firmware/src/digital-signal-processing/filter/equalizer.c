@@ -1,4 +1,4 @@
-#include "signal-processing/filter/equalizer.h"
+#include "digital-signal-processing/filter/equalizer.h"
 
 #include <stdint.h>
 

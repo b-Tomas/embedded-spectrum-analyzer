@@ -1,4 +1,4 @@
-#include "signal-processing/filter/filter.h"
+#include "digital-signal-processing/filter/filter.h"
 
 /**
  * @brief Instance of filter

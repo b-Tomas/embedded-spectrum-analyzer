@@ -2,7 +2,7 @@
 
 #include "lpc17xx_adc.h"
 #include "lpc_types.h"
-#include "signal-processing/filter/equalizer.h"
+#include "digital-signal-processing/filter/equalizer.h"
 
 #include <stdbool.h>
 

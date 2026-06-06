@@ -46,7 +46,7 @@ void system_Init(Mode mode);
  * @brief System non-configurable setting.
  * @details ADC, DAC GPDMA
  */
-void system_NonConfigurableSetting(void);
+void system_nonConfigurableSetting(void);
 
 /**
  * @brief System config for real time mode.
@@ -97,4 +97,4 @@ void system_StartEqualizerMode(void);
  * @brief Sets a new operational mode.
  * @param mode the new mode.
  */
-void system_SetMode(Mode mode);
+void system_setMode(Mode mode);

@@ -14,7 +14,7 @@
 System SYSTEM;
 
 void system_Init(Mode mode) {
-    system_SetMode(mode);
+    system_setMode(mode);
     GPDMA_Init();
     ADC_Init(ADC_RATE);
     DAC_Init();

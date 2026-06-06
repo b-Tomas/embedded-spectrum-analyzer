@@ -19,7 +19,7 @@ int main(void) {
 #endif
 
     system_Init(realTimeMode);
-    system_NonConfigurableSetting();
+    system_nonConfigurableSetting();
 
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {

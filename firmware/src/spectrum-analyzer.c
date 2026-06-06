@@ -1,8 +1,4 @@
 #include "LPC17xx.h"
-#include "lpc17xx_adc.h"
-#include "lpc17xx_dac.h"
-#include "lpc17xx_gpdma.h"
-#include "fft.h"
 #include "lpc_types.h"
 #include "system.h"
 #include "test/it.h"

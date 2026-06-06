@@ -18,21 +18,17 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
       | * | 0 | # | D |
 ``` 
 
-Comportamiento del teclado
-  A: Cambia a Modo 1: Análisis del Espectro en Tiempo Real. 
-  B: Cambia a Modo 2: Muestreo de ruido. 
-  C: Cambia entre el Modo 3: Equalizador y el modo anterior a este. 
-  *: Aplica el filtro 1: passtrogh
-  #: Aplica el filtro 2: Suprime el ruido eléctrico. 
-  D: Aplica el filtro 3: Equalización
 
-> [!NOTE]
->
-> El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado (en decibeles).
->
-> Por cada banda puede atenuar como minimo -12 DB y amplificar como máxio 12 DB. Como el rango de frecuencias es de 0-16 kHz tomamos 10 bandas : 
->
-> 31.5 Hz – 63 Hz – 125 Hz – 250 Hz – 500 Hz – 1 kHz – 2 Hz – 4 kHz – 8 kHz – 16 kHz.
+
+> [!NOTE]  
+> **Comportamiento del teclado**:  
+>   A: Cambia a Modo 1: Análisis del Espectro en Tiempo Real.  
+>   B: Cambia a Modo 2: Muestreo de ruido.  
+>   C: Cambia entre el Modo 3: Equalizador y el modo anterior a este.  
+>   *: Aplica el filtro 1: passtrogh.  
+>   #: Aplica el filtro 2: Suprime el ruido eléctrico.  
+>   D: Aplica el filtro 3: Equalización.  
+
 
 <!-- Insertar gráficos -->
 
@@ -69,8 +65,11 @@ Comportamiento del teclado
 1. El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado.
 2. La configuración se guarda en la zona de memoria reservada para el filtro de ecualización.
 
-> [!NOTE]
-> - Definir bandas 
+> [!NOTE]  
+>  El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado (en decibeles).  
+> Por cada banda puede atenuar como minimo -12 DB y amplificar como máxio 12 DB. Como el rango de frecuencias es de 0-16 kHz tomamos 10 bandas:  
+> 31.5 Hz – 63 Hz – 125 Hz – 250 Hz – 500 Hz – 1 kHz – 2 Hz – 4 kHz – 8 kHz – 16 kHz.
+>
 
 ## Requisitos
 

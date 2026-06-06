@@ -1,4 +1,4 @@
-#include "fft_tables.h"
+#include "fft/fft_tables.h"
 
 // ─── Twiddle factors (coseno, Q15) ───────────────────────────────────────────
 // tw_cos[k] = round(cos(2π·k/N) * 32767),  N = 1024.

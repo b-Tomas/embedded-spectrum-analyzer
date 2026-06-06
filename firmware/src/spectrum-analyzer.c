@@ -3,7 +3,7 @@
 #include "input/keyboard.h"
 #include "lpc17xx_exti.h"
 #include "lpc_types.h"
-#include "system.h"
+#include "system/system.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -18,7 +18,8 @@ int main(void) {
     it_run_all();
 #endif
 
-    systemInit(realTimeMode);
+    system_Init(realTimeMode);
+    system_NonConfigurableSetting();
 
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {
@@ -38,26 +39,30 @@ int main(void) {
         switch (SYSTEM.mode) {
         case realTimeMode:
             if (!SYSTEM.flag_ModeConfigured) {
-                configRealTimeMode();
+                system_ConfigureSetting_RealTimeMode();
                 SYSTEM.flag_ModeConfigured = SET;
             }
-            executeRealTimeMode();
+
+            system_StartRealTimeMode();
+
             break;
 
         case noiseSamplingMode:
             if (!SYSTEM.flag_ModeConfigured) {
                 SYSTEM.flag_ModeConfigured = SET;
-                configNoiseSamplingMode();
+                system_ConfigureSetting_NoiseSamplingMode();
+                system_StartNoiseSamplingMode();
             }
-            executeNoiseSamplingMode();
+  
             break;
 
         case equalizerMode:
             if (!SYSTEM.flag_ModeConfigured) {
                 SYSTEM.flag_ModeConfigured = SET;
-                configEqualizerMode();
+                system_ConfigureSetting_EqualizerMode();
+                system_StartEqualizerMode();
             }
-            executeEqualizerMode();
+
             break;
         }
     }

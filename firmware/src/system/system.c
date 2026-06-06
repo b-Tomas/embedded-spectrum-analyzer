@@ -8,6 +8,7 @@
 #include "lpc17xx_gpdma.h"
 #include "lpc_types.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 /** @brief Global orchestrator instance. */
@@ -55,21 +56,27 @@ void system_ConfigureSetting_EqualizerMode() {
 }
 
 void system_StartRealTimeMode(void) {
-    /** ADC configured in burst mode, needs to indicate when input buffer is filled */
 
-    /**
-     * if(SYSTM.filter!=passthrough) {
-     *    if (input buffer is'nt loaded) return;
-     *    - Apply Fourier Transform.
-     *    - Aplly filter.
-     *    - Apply inverse Fourier Transform.
-     *    DISCUSS:Indirect? transfers the fullied signal to DAC and displays.
-     *    return;
-     *  }
-     *
-     *  Adapt the signal for the DAC
-     *
-     */
+    if (SYSTEM.filter != passthrough) {
+        if (flag_bufferReadyforFFT) {
+
+            /** DSP_FFT(); */
+            /** DSP_ApplyFilter() or could be DSP_ApplyFiler(&SYSTEM.filter) */
+            /** DSP_IFFT() */
+            flag_bufferReadyforFFT = RESET;
+            /** average the result for the DAC*/
+            uint32_t dacValue = bufferAverage(&DSP_FFT_RESULT, BUFFER_SIZE);
+            DAC_UpdateValue(dacValue);
+
+        } else {
+            uint32_t adcSample = ADC_ChannelGetData(ADC_CHANNEL_0);
+            DAC_UpdateValue(adcSample);
+            /** display the signal
+             * Tomo el ultimo valor del ADC y lo cargo como una barra, desplazo el valor anterior
+             * hacia la derecha?
+             */
+        }
+    }
 }
 
 void system_StartNoiseSamplingMode(void) {
@@ -93,6 +100,19 @@ void system_StartEqualizerMode(void) {
      */
 }
 
+uint32_t bufferAverage(volatile uint32_t* BUFFER_ADDRESS, size_t length) {
+    if (BUFFER_ADDRESS == NULL || length == 0) {
+        return 0u;
+    }
+
+    int64_t sum = 0;
+    for (size_t i = 0; i < length; i++) {
+        sum += BUFFER_ADDRESS[i];
+    }
+
+    return (uint32_t)(sum / (int64_t)length);
+}
+
 //=================================================================
 // Getters y Setters
 //=================================================================
@@ -100,4 +120,25 @@ void system_StartEqualizerMode(void) {
 void system_setMode(Mode mode) {
     SYSTEM.mode = mode;
     SYSTEM.flag_ModeConfigured = RESET;
+}
+
+void setFilter(Filter filter) {
+    SYSTEM.filter = filter;
+
+    if (filter == passthrough) {
+        /**< Stop DMA data handler. When passthrough is set, The system dont aplly FFT and Inverse
+         * FFT, just update the DAC with the ADC new sample
+         * Pause the channels related with ADC-Buffer trnasfers
+         */
+        GPDMA_ChannelGracefulStop(GPDMA_CH_7);
+        GPDMA_ChannelGracefulStop(GPDMA_CH_6);
+    } else {
+
+        GPDMA_ChannelResume(GPDMA_CH_7);
+        GPDMA_ChannelResume(GPDMA_CH_6);
+    }
+}
+
+void clearFilter(void) {
+    setFilter(passthrough);
 }

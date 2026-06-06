@@ -3,9 +3,12 @@
 #include "lpc17xx_gpdma.h"
 #include "lpc_types.h"
 
-uint32_t FIRST_BUFFER_ADDRESS;
-uint32_t SECOND_BUFFER_ADDRESS;
-uint32_t FFT_BUFFER_ADDRESS; /** simbolic */
+volatile uint32_t FIRST_BUFFER_ADDRESS;
+volatile uint32_t SECOND_BUFFER_ADDRESS;
+volatile uint32_t FFT_BUFFER_ADDRESS; /** simbolic */
+
+FlagStatus flag_bufferReadyforFFT = RESET;
+volatile uint32_t DSP_FFT_RESULT; /** simbolic */
 
 /**
  * @brief LLI structs for ADC - Buffer.
@@ -108,8 +111,8 @@ void GPDMA_IRQHandler(void) {
     }
     if (GPDMA_IntGetStatus(GPDMA_INTTC, GPDMA_CH_6)) {
         /** TODO: Sequence upon completioon buffer to FFT's buffer
-         * Should rise a flag to trigger FFT.
          */
+        flag_bufferReadyforFFT = SET;
     }
     /* */
 }

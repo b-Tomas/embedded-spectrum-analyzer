@@ -2,6 +2,8 @@
 
 #include "lpc_types.h"
 
+#include <stddef.h>
+
 /**
  * @brief Available operation modes for the system.
  */
@@ -89,6 +91,15 @@ void system_StartNoiseSamplingMode(void);
  */
 void system_StartEqualizerMode(void);
 
+/**
+ * @brief average a buffer.
+ *
+ * @param BUFFER_ADDRESS
+ * @param length
+ * @return the averaged values
+ */
+uint32_t bufferAverage(volatile uint32_t* BUFFER_ADDRESS, size_t length);
+
 //=================================================================
 // Getters y Setters
 //=================================================================
@@ -98,3 +109,14 @@ void system_StartEqualizerMode(void);
  * @param mode the new mode.
  */
 void system_setMode(Mode mode);
+
+/**
+ * @brief Selects one of the filters.
+ * @param filter The new filter to be applied.
+ */
+void setFilter(Filter filter);
+
+/**
+ * @brief Clear the filter.
+ */
+void clearFilter(void);

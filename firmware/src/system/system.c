@@ -2,19 +2,26 @@
 
 #include "LPC17xx.h"
 #include "adc/adc.h"
+<<<<<<< HEAD
 #include "fft/fft.h"
+=======
+>>>>>>> cbf36f0 (adding non-configurable settings and configurable settings)
 #include "gpdma/gpdma.h"
 #include "lpc17xx_adc.h"
 #include "lpc17xx_dac.h"
 #include "lpc17xx_gpdma.h"
 #include "lpc_types.h"
 
+<<<<<<< HEAD
 #include <stddef.h>
+=======
+>>>>>>> cbf36f0 (adding non-configurable settings and configurable settings)
 #include <stdint.h>
 
 /** @brief Global orchestrator instance. */
 System SYSTEM;
 
+<<<<<<< HEAD
 FlagStatus flag_buildPassThroughFilter = RESET;
 FlagStatus flag_buildNoiseSuppressionFilter = RESET;
 FlagStatus flag_buildPassLowFilter = RESET;
@@ -24,6 +31,10 @@ FlagStatus flag_buildRejectBandFilter = RESET;
 
 void system_Init(Mode mode) {
     system_setMode(mode);
+=======
+void system_Init(Mode mode) {
+    system_SetMode(mode);
+>>>>>>> cbf36f0 (adding non-configurable settings and configurable settings)
     GPDMA_Init();
     ADC_Init(ADC_RATE);
     DAC_Init();
@@ -38,6 +49,11 @@ void system_nonConfigurableSetting(void) {
     ADC_BurstEnable();
     ADC_PowerUp();
 
+<<<<<<< HEAD
+=======
+    /** DAC is always on, should not be modified on the changes mode*/
+
+>>>>>>> cbf36f0 (adding non-configurable settings and configurable settings)
     /** GPDMA non-configurable setting */
 
     /**< This channel transfers the ADC output to a memory buffer */
@@ -62,6 +78,7 @@ void system_ConfigureSetting_EqualizerMode() {
 }
 
 void system_StartRealTimeMode(void) {
+<<<<<<< HEAD
 
     if (SYSTEM.filter != passthrough && flag_bufferReadyforFFT) {
 
@@ -85,6 +102,23 @@ void system_StartRealTimeMode(void) {
          * hacia la derecha?
          */
     }
+=======
+    /** ADC configured in burst mode, needs to indicate when input buffer is filled */
+
+    /**
+     * if(SYSTM.filter!=passthrough) {
+     *    if (input buffer is'nt loaded) return;
+     *    - Apply Fourier Transform.
+     *    - Aplly filter.
+     *    - Apply inverse Fourier Transform.
+     *    DISCUSS:Indirect? transfers the fullied signal to DAC and displays.
+     *    return;
+     *  }
+     *
+     *  Adapt the signal for the DAC
+     *
+     */
+>>>>>>> cbf36f0 (adding non-configurable settings and configurable settings)
 }
 
 void system_StartNoiseSamplingMode(void) {
@@ -116,6 +150,7 @@ void system_setMode(Mode mode) {
     SYSTEM.mode = mode;
     SYSTEM.flag_ModeConfigured = RESET;
 }
+<<<<<<< HEAD
 
 void setFilter(Filter filter) {
     SYSTEM.filter = filter;
@@ -137,3 +172,5 @@ void setFilter(Filter filter) {
 void clearFilter(void) {
     setFilter(passthrough);
 }
+=======
+>>>>>>> cbf36f0 (adding non-configurable settings and configurable settings)

@@ -22,6 +22,7 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
 
 > [!NOTE]  
 > **Comportamiento del teclado**:  
+<<<<<<< HEAD
 >   `A`- Cambia a Modo 1: Análisis del Espectro en Tiempo Real.  
 >   `B`- Cambia a Modo 2: Muestreo de ruido.  
 >   `C`- Cambia a Modo 3: Equalizador.  
@@ -32,6 +33,14 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
 >   `4`- Aplica el filtro 4: Pasa alto.  
 >   `5`- Aplica el filtro 5: Pasa banda.  
 >   `6`- Aplica el filtro 6: Rechaza banda.  
+=======
+>   A: Cambia a Modo 1: Análisis del Espectro en Tiempo Real.  
+>   B: Cambia a Modo 2: Muestreo de ruido.  
+>   C: Cambia entre el Modo 3: Equalizador y el modo anterior a este.  
+>   *: Aplica el filtro 1: passtrogh.  
+>   #: Aplica el filtro 2: Suprime el ruido eléctrico.  
+>   D: Aplica el filtro 3: Equalización.  
+>>>>>>> cbf36f0 (adding non-configurable settings and configurable settings)
 
 
 <!-- Insertar gráficos -->
@@ -70,9 +79,15 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
 2. La configuración se guarda en la zona de memoria reservada para el filtro de ecualización.
 
 > [!NOTE]  
+<<<<<<< HEAD
 >  El usuario define la atenuación del filtro, previamente selccionado, mediante un teclado matricial, el usuario debe escribir el porcentaje de atenuació/intensidad a aplicar en ese filtro. Por ejemplo si está el fltro pasa bajos seleccionado y el usaurio introduce 50, refleja una atenuación del 50% a las frecuencias que correspondan.  
 > Las bandas son:  
 > `0-125` `125-250` `250-500` `500-1k` `1k-2k` `2k-4k` `4k-8k` `8k-16k` [Hz]
+=======
+>  El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado (en decibeles).  
+> Por cada banda puede atenuar como minimo -12 DB y amplificar como máxio 12 DB. Como el rango de frecuencias es de 0-16 kHz tomamos 10 bandas:  
+> 31.5 Hz – 63 Hz – 125 Hz – 250 Hz – 500 Hz – 1 kHz – 2 Hz – 4 kHz – 8 kHz – 16 kHz.
+>>>>>>> cbf36f0 (adding non-configurable settings and configurable settings)
 >
 
 ## Requisitos

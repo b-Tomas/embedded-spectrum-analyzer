@@ -53,7 +53,7 @@ int main(void) {
                 system_ConfigureSetting_NoiseSamplingMode();
                 system_StartNoiseSamplingMode();
             }
-  
+        
             break;
 
         case equalizerMode:
@@ -62,6 +62,7 @@ int main(void) {
                 system_ConfigureSetting_EqualizerMode();
                 system_StartEqualizerMode();
             }
+  
             break;
         }
     }

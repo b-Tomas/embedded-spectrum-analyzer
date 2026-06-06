@@ -2,11 +2,11 @@
 
 #include <stdint.h>
 
-#define LOG2_PERIOD  10
-#define PERIOD       (1 << LOG2_PERIOD)
-#define ADC_MAX      4095
-#define ADC_CENTER   2048
-#define Q15_ONE      32767
+#define LOG2_PERIOD 10
+#define PERIOD      (1 << LOG2_PERIOD)
+#define ADC_MAX     4095
+#define ADC_CENTER  2048
+#define Q15_ONE     32767
 
 /**
  * @brief Computes the in-place FFT of a real ADC input signal.

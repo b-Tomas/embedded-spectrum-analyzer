@@ -1,5 +1,7 @@
 #include "fft.h"
+
 #include "fft_tables.h"
+
 #include <stdint.h>
 #include <string.h>
 
@@ -22,8 +24,12 @@ static void bit_reverse(int32_t* re, int32_t* im) {
         unsigned int r = bit_rev_table[i];
         if ((int)r > i) {
             int32_t t;
-            t = re[i]; re[i] = re[r]; re[r] = t;
-            t = im[i]; im[i] = im[r]; im[r] = t;
+            t = re[i];
+            re[i] = re[r];
+            re[r] = t;
+            t = im[i];
+            im[i] = im[r];
+            im[r] = t;
         }
     }
 }
@@ -44,7 +50,7 @@ void FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
     bit_reverse(fft_re, fft_im);
 
     for (int stage = 0; stage < LOG2_PERIOD; stage++) {
-        int len  = 1 << (stage + 1);
+        int len = 1 << (stage + 1);
         int half = len >> 1;
         int step = PERIOD / len;
 
@@ -53,7 +59,7 @@ void FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
             for (int j = 0; j < half; j++, tw_idx += step) {
                 // wr = cos(2π·tw_idx/N),  wi = −sin(2π·tw_idx/N)
                 // sin(x) = cos(x − π/2)  →  índice offset = 3·N/4 = 768
-                int16_t wr =  tw_cos[tw_idx];
+                int16_t wr = tw_cos[tw_idx];
                 int16_t wi = -tw_cos[(tw_idx + 768) & (PERIOD - 1)];
 
                 int32_t ur = fft_re[k + j];
@@ -64,8 +70,8 @@ void FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
                 int32_t tr = mul_q15(vr, wr) - mul_q15(vi, wi);
                 int32_t ti = mul_q15(vr, wi) + mul_q15(vi, wr);
 
-                fft_re[k + j]        = ur + tr;
-                fft_im[k + j]        = ui + ti;
+                fft_re[k + j] = ur + tr;
+                fft_im[k + j] = ui + ti;
                 fft_re[k + j + half] = ur - tr;
                 fft_im[k + j + half] = ui - ti;
             }
@@ -84,7 +90,7 @@ void IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT) {
     bit_reverse(fft_re, fft_im);
 
     for (int stage = 0; stage < LOG2_PERIOD; stage++) {
-        int len  = 1 << (stage + 1);
+        int len = 1 << (stage + 1);
         int half = len >> 1;
         int step = PERIOD / len;
 
@@ -103,8 +109,8 @@ void IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT) {
                 int32_t tr = mul_q15(vr, wr) - mul_q15(vi, wi);
                 int32_t ti = mul_q15(vr, wi) + mul_q15(vi, wr);
 
-                fft_re[k + j]        = ur + tr;
-                fft_im[k + j]        = ui + ti;
+                fft_re[k + j] = ur + tr;
+                fft_im[k + j] = ui + ti;
                 fft_re[k + j + half] = ur - tr;
                 fft_im[k + j + half] = ui - ti;
             }

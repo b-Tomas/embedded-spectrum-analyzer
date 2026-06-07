@@ -162,4 +162,3 @@ void applyFilter(int32_t* OmR, int32_t* OmI, const int16_t* filterH) {
         OmI[i] = mul_q15(OmI[i], filterH[i]);
     }
 }
-

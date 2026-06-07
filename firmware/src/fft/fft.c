@@ -60,7 +60,7 @@ void FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
                 // wr = cos(2π·tw_idx/N),  wi = −sin(2π·tw_idx/N)
                 // sin(x) = cos(x − π/2)  →  índice offset = 3·N/4 = 768
                 int16_t wr = tw_cos[tw_idx];
-                int16_t wi = -tw_cos[(tw_idx + 768) & (PERIOD - 1)];
+                int16_t wi = -tw_cos[(tw_idx + 3 * PERIOD / 4) & (PERIOD - 1)];
 
                 int32_t ur = fft_re[k + j];
                 int32_t ui = fft_im[k + j];
@@ -99,7 +99,7 @@ void IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT) {
             for (int j = 0; j < half; j++, tw_idx += step) {
                 // wr = cos(2π·tw_idx/N),  wi = +sin(2π·tw_idx/N)  (signo IFFT)
                 int16_t wr = tw_cos[tw_idx];
-                int16_t wi = tw_cos[(tw_idx + 768) & (PERIOD - 1)];
+                int16_t wi = tw_cos[(tw_idx + 3 * PERIOD / 4) & (PERIOD - 1)];
 
                 int32_t ur = fft_re[k + j];
                 int32_t ui = fft_im[k + j];
@@ -163,9 +163,3 @@ void applyFilter(int32_t* OmR, int32_t* OmI, const int16_t* filterH) {
     }
 }
 
-// ─── substractArraysFrec (legacy) ────────────────────────────────────────────
-void substractArraysFrec(int32_t* array1, int32_t* array2) {
-    for (int i = 0; i < PERIOD; i++) {
-        array1[i] -= array2[i];
-    }
-}

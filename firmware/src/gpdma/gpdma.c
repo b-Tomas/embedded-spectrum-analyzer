@@ -3,12 +3,31 @@
 #include "lpc17xx_gpdma.h"
 #include "lpc_types.h"
 
+/**
+ * @brief  Memory address for the double-buffer. Used for real tieme configuration.
+ * switching btween theirselft, the free buffer is used as source for FFT(...), will be transferred
+ * by DMA
+ * @warning. DISCUSS: El valor del ADC se va cargando en un primer buffer, cuando se llena, mediante
+ * una interrupción, inicia a transferir al buffer que usa FFT(...). Mientras tanto se carga el
+ * segundo buffer, no estoy seguro si realmente es suficiente para que termine FFT(...) sin
+ * que ingresen nuevos datos del ADC. 1024 datos / ADC_RATE => 1204/32Khz = 0.03125 s. Esto es lo
+ * que tarda en llenase el buffer conectado al ADC
+ */
 volatile uint32_t FIRST_BUFFER_ADDRESS;
 volatile uint32_t SECOND_BUFFER_ADDRESS;
-volatile uint32_t FFT_BUFFER_ADDRESS; /** simbolic */
 
 FlagStatus flag_bufferReadyforFFT = RESET;
-volatile uint32_t DSP_FFT_RESULT; /** simbolic */
+
+/** Addresses for the input and output FFT buffers  */
+volatile uint32_t FFT_SOURCE_BUFFER_TIME;
+volatile uint32_t DSP_FFT_RESULT_RE;
+volatile uint32_t DSP_FFT_RESULT_IM;
+
+/** Addresses for the input and output IFFT buffers  */
+
+volatile uint32_t DSP_IFFT_RESULT;
+volatile uint32_t IFFT_SOURCE_BUFFER_RE;
+volatile uint32_t IFFT_SOURCE_BUFFER_IM;
 
 /**
  * @brief LLI structs for ADC - Buffer.
@@ -33,31 +52,33 @@ GPDMA_LLI_T adc_secondBuffer_LLI = {
     .srcAddr = (uint32_t)&LPC_ADC->ADGDR,
     .dstAddr = (uint32_t)&SECOND_BUFFER_ADDRESS,
     .nextLLI = (uint32_t)&adc_firstBuffer_LLI,
-    .control = (BUFFER_SIZE | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
+    .control =
+        (TRANSFER_SIZE_wBURST256 | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
 };
 
 GPDMA_LLI_T adc_firstBuffer_LLI = {
     .srcAddr = (uint32_t)&LPC_ADC->ADGDR,
     .dstAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
     .nextLLI = (uint32_t)&adc_secondBuffer_LLI,
-    .control = (BUFFER_SIZE | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
+    .control =
+        (TRANSFER_SIZE_wBURST256 | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
 };
 
 const GPDMA_Endpoint_T sourceCH7 = {
     .width = GPDMA_HALFWORD,
-    .burst = GPDMA_BSIZE_1,
+    .burst = GPDMA_BSIZE_256,
     .increment = DISABLE,
 };
 
 const GPDMA_Endpoint_T destinationCH7 = {
     .width = GPDMA_HALFWORD,
-    .burst = GPDMA_BSIZE_1,
+    .burst = GPDMA_BSIZE_256,
     .increment = ENABLE,
 };
 
 GPDMA_Channel_CFG_T ChannelConfig_adc_buffer = {
     .channelNum = GPDMA_CH_7,
-    .transferSize = BUFFER_SIZE,
+    .transferSize = TRANSFER_SIZE_wBURST256,
     .type = GPDMA_P2M,
     .srcMemAddr = (uint32_t)&LPC_ADC->ADGDR,
     .dstMemAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
@@ -74,31 +95,31 @@ TODO(samuel): connection between the free buffer to the one used by FFT(...)
 
 const GPDMA_Endpoint_T endpointCH6 = {
     .width = GPDMA_HALFWORD,
-    .burst = GPDMA_BSIZE_1,
+    .burst = GPDMA_BSIZE_256,
     .increment = ENABLE,
 };
 
 GPDMA_LLI_T firstBuffer_FFT_LLI = {
     .srcAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
-    .dstAddr = (uint32_t)&FFT_BUFFER_ADDRESS, // temp
+    .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
     .nextLLI = (uint32_t)&secondBuffer_FFT_LLI,
-    .control = (BUFFER_SIZE | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
+    .control = (TRANSFER_SIZE_wBURST256 | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
 };
 
 GPDMA_LLI_T secondBuffer_FFT_LLI = {
     .srcAddr = (uint32_t)&SECOND_BUFFER_ADDRESS,
-    .dstAddr = (uint32_t)&FFT_BUFFER_ADDRESS, // temp
+    .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
     .nextLLI = (uint32_t)&firstBuffer_FFT_LLI,
-    .control = (BUFFER_SIZE | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
+    .control = (TRANSFER_SIZE_wBURST256 | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
     /** Once completed raise the flag that triggers the FFT() */
 };
 
 GPDMA_Channel_CFG_T ChannelConfig_buffer_FFT = {
     .channelNum = GPDMA_CH_6,
-    .transferSize = BUFFER_SIZE,
+    .transferSize = TRANSFER_SIZE_wBURST256,
     .type = GPDMA_M2M,
     .srcMemAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
-    .dstMemAddr = (uint32_t)&FFT_BUFFER_ADDRESS, // temp
+    .dstMemAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
     .src = endpointCH6,
     .dst = endpointCH6,
     .intTC = ENABLE,

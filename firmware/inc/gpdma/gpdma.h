@@ -6,30 +6,34 @@
 /**
  * @brief buffer size.
  */
-#define BUFFER_SIZE 1024
+#define TRANSFER_SIZE_wBURST256 4
 
 /**
- * @brief FFT buffer fullied flag.
+ * @brief flag that indicates that the FFT input buffer is ready.
  */
 extern FlagStatus flag_bufferReadyforFFT;
 
 /**
- * @brief  Memory address for the double-buffer. Used for real tieme configuration.
- * switching btween theirselft, the free buffer is used as source for FFT(...), will be transferred
- * by DMA
- * @warning. DISCUSS: El valor del ADC se va cargando en un primer buffer, cuando se llena, mediante
- * una interrupción, inicia a transferir al buffer que usa FFT(...). Mientras tanto se carga el
- * segundo buffer, no estoy seguro si realmente es suficiente para que termine FFT(...) sin
- * que ingresen nuevos datos del ADC. 1024 datos / ADC_RATE => 1204/32Khz = 0.03125 s. Esto es lo
- * que tarda en llenase el buffer conectado al ADC
+ * @brief Memory address for the FFT input buffer
  */
-extern volatile uint32_t FIRST_BUFFER_ADDRESS;
-extern volatile uint32_t SECOND_BUFFER_ADDRESS;
+extern volatile uint32_t FFT_SOURCE_BUFFER_TIME;
 
 /**
- * @brief  Memory address for the result of FFT(...)
+ * @brief  Memory addresses for the results of the FFT (real and imaginary part)
  */
-extern volatile uint32_t DSP_FFT_RESULT;
+extern volatile uint32_t DSP_FFT_RESULT_RE;
+extern volatile uint32_t DSP_FFT_RESULT_IM;
+
+/**
+ * @brief  Memory addresses for the source of the IFFT
+ */
+extern volatile uint32_t IFFT_SOURCE_BUFFER_RE;
+extern volatile uint32_t IFFT_SOURCE_BUFFER_IM;
+
+/**
+ * @brief  Memory address for the result of IFFT
+ */
+extern volatile uint32_t DSP_IFFT_RESULT;
 
 /**
  * @brief Real time channel configuration structs.

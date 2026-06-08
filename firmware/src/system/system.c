@@ -30,8 +30,6 @@ void system_nonConfigurableSetting(void) {
     ADC_BurstEnable();
     ADC_PowerUp();
 
-    /** DAC is always on, should not be modified on the changes mode*/
-
     /** GPDMA non-configurable setting */
 
     /**< This channel transfers the ADC output to a memory buffer */
@@ -60,12 +58,12 @@ void system_StartRealTimeMode(void) {
     if (SYSTEM.filter != passthrough) {
         if (flag_bufferReadyforFFT) {
 
-            /** DSP_FFT(); */
+            /** DSP_FFT(&DSP_INPUT_BUFFER, DSP_FFT_RESULT_RE, DSP_FFT_RESULT_IM); */
             /** DSP_ApplyFilter() or could be DSP_ApplyFiler(&SYSTEM.filter) */
             /** DSP_IFFT() */
             flag_bufferReadyforFFT = RESET;
             /** average the result for the DAC*/
-            uint32_t dacValue = bufferAverage(&DSP_FFT_RESULT, BUFFER_SIZE);
+            uint32_t dacValue = bufferAverage(&DSP_IFFT_RESULT, 1024);
             DAC_UpdateValue(dacValue);
 
         } else {
@@ -100,17 +98,17 @@ void system_StartEqualizerMode(void) {
      */
 }
 
-uint32_t bufferAverage(volatile uint32_t* BUFFER_ADDRESS, size_t length) {
-    if (BUFFER_ADDRESS == NULL || length == 0) {
+uint32_t bufferAverage(volatile uint32_t* BUFFER_ADDRESS, size_t bufferSize) {
+    if (BUFFER_ADDRESS == NULL || bufferSize == 0) {
         return 0u;
     }
 
     int64_t sum = 0;
-    for (size_t i = 0; i < length; i++) {
+    for (size_t i = 0; i < bufferSize; i++) {
         sum += BUFFER_ADDRESS[i];
     }
 
-    return (uint32_t)(sum / (int64_t)length);
+    return (uint32_t)(sum / (int64_t)bufferSize);
 }
 
 //=================================================================

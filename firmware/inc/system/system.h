@@ -94,11 +94,11 @@ void system_StartEqualizerMode(void);
 /**
  * @brief average a buffer.
  *
- * @param BUFFER_ADDRESS
- * @param length
+ * @param BUFFER_ADDRESS destination of the buffer address to average it
+ * @param bufferSize the buffer's size
  * @return the averaged values
  */
-uint32_t bufferAverage(volatile uint32_t* BUFFER_ADDRESS, size_t length);
+uint32_t bufferAverage(volatile uint32_t* BUFFER_ADDRESS, size_t bufferSize);
 
 //=================================================================
 // Getters y Setters

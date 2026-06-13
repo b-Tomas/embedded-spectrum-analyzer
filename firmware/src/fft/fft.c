@@ -143,8 +143,10 @@ void IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT) {
  * que applyFilter omita el clamp en su hot path.
  */
 void buildFilter(int16_t* filterH, int binLow, int binHigh, int16_t magnitude) {
-    if (magnitude < 0) magnitude = 0;
-    if (magnitude > Q15_ONE) magnitude = Q15_ONE;
+    if (magnitude < 0)
+        magnitude = 0;
+    if (magnitude > Q15_ONE)
+        magnitude = Q15_ONE;
     int16_t outside = (int16_t)(Q15_ONE - magnitude);
     for (int i = 0; i < PERIOD; i++) {
         int pos = i <= PERIOD / 2 ? i : PERIOD - i;

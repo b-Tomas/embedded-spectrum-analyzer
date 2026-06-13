@@ -12,10 +12,10 @@
  * @brief Computes the in-place FFT of a real ADC input signal.
  *
  * @param sourceT  Input: time-domain ADC samples (uint16_t, length PERIOD).
- * @param sourceR  Output: real part of the frequency-domain result (Q15 scaled).
- * @param sourceI  Output: imaginary part of the frequency-domain result (Q15 scaled).
+ * @param resultR  Output: real part of the frequency-domain result (Q15 scaled).
+ * @param resultI  Output: imaginary part of the frequency-domain result (Q15 scaled).
  */
-void FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI);
+void FFT(uint16_t* sourceT, int32_t* resultR, int32_t* resultI);
 
 /**
  * @brief Computes the inverse FFT, recovering the time-domain signal.
@@ -43,8 +43,8 @@ void buildFilter(int16_t* filterH, int binLow, int binHigh, int16_t magnitude);
 /**
  * @brief Multiplies the complex spectrum by a real filter H[k], in-place.
  *
- * @param OmR     Real part of the spectrum (modified in-place).
- * @param OmI     Imaginary part of the spectrum (modified in-place).
+ * @param resultR     Real part of the spectrum (modified in-place).
+ * @param resultI     Imaginary part of the spectrum (modified in-place).
  * @param filterH Filter coefficients in Q15 format, length PERIOD.
  */
-void applyFilter(int32_t* OmR, int32_t* OmI, const int16_t* filterH);
+void applyFilter(int32_t* resultR, int32_t* resultI, const int16_t* filterH);

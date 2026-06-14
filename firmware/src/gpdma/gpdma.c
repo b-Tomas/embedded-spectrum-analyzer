@@ -70,7 +70,7 @@ const GPDMA_Endpoint_T destinationCH7 = {
     .increment = ENABLE,
 };
 
-GPDMA_Channel_CFG_T ChannelConfig_adc_buffer = {
+GPDMA_Channel_CFG_T adc_buffer_channelCfg = {
     .channelNum = GPDMA_CH_7,
     .transferSize = TRANSFER_SIZE_wBURST256,
     .type = GPDMA_P2M,

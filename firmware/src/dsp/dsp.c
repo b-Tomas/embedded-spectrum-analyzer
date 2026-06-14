@@ -1,11 +1,16 @@
-#include "fft/fft.h"
+#include "dsp/dsp.h"
 
-#include "fft/fft_tables.h"
+#include "display/SSD1306.h"
+#include "display/display.h"
+#include "display/gfx.h"
+#include "dsp/fft_tables.h"
+#include "lpc17xx_gpdma.h"
+#include "system/system.h"
 
 #include <stdint.h>
 #include <string.h>
 
-// ─── Buffers internos ─────────────────────────────────────────────────────────
+// ─── Buffers internos ───────────────────────────── ────────────────────────────
 static int32_t fft_re[PERIOD];
 static int32_t fft_im[PERIOD];
 
@@ -42,7 +47,7 @@ static void bit_reverse(int32_t* re, int32_t* im) {
 // Optimizaciones:
 //  - tw_sin[] eliminado; se usa tw_cos[(idx + 768) & 1023] = sin(idx)
 //  - tw_idx calculado con acumulador (elimina ~5120 multiplicaciones)
-void FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
+void dsp_FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
     for (int i = 0; i < PERIOD; i++) {
         fft_re[i] = (int32_t)sourceT[i] - ADC_CENTER;
         fft_im[i] = 0;
@@ -84,7 +89,7 @@ void FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
 
 // ─── IFFT ─────────────────────────────────────────────────────────────────────
 // Sin escalado interno; divide por PERIOD al final (convención estándar).
-void IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT) {
+void dsp_IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT) {
     memcpy(fft_re, sourceR, PERIOD * sizeof(int32_t));
     memcpy(fft_im, sourceI, PERIOD * sizeof(int32_t));
     bit_reverse(fft_re, fft_im);
@@ -165,4 +170,54 @@ void applyFilter(int32_t* OmR, int32_t* OmI, int16_t* filterH) {
         OmR[i] = mul_q15(OmR[i], filterH[i]);
         OmI[i] = mul_q15(OmI[i], filterH[i]);
     }
+}
+
+void dsp_compressSignal(const int32_t inputSignalBuffer[PERIOD],
+                        uint8_t outputCompressedBuffer[N_BARS]) {
+    int32_t barSums[N_BARS];
+    int base = PERIOD / N_BARS;
+    int remainder = PERIOD % N_BARS;
+    int idx = 0;
+
+    // ── Bin & average ──────────────────────────────────────────────────────
+    // Distribute PERIOD samples across N_BARS bins. The first `remainder`
+    // bins get one extra sample each.
+    for (int bar = 0; bar < N_BARS; bar++) {
+        int count = base + (bar < remainder ? 1 : 0);
+        int32_t sum = 0;
+        for (int j = 0; j < count; j++) {
+            int32_t v = inputSignalBuffer[idx++];
+            if (v < 0)
+                v = -v;
+            sum += v;
+        }
+        barSums[bar] = sum / count;
+    }
+
+    // ── Dynamic normalisation ──────────────────────────────────────────────
+    int32_t maxAvg = 0;
+    for (int bar = 0; bar < N_BARS; bar++) {
+        if (barSums[bar] > maxAvg)
+            maxAvg = barSums[bar];
+    }
+
+    // Scale linearly to [0, DISPLAY_HEIGHT]
+    const uint8_t displayMax = DISPLAY_HEIGHT;
+    if (maxAvg > 0) {
+        for (int bar = 0; bar < N_BARS; bar++) {
+            uint8_t v = (uint8_t)((barSums[bar] * displayMax) / maxAvg);
+            outputCompressedBuffer[bar] = v > displayMax ? displayMax : v;
+        }
+    } else {
+        for (int bar = 0; bar < N_BARS; bar++)
+            outputCompressedBuffer[bar] = 0;
+    }
+}
+
+void dsp_setFilter(Filter filter) {
+    SYSTEM.filter = filter;
+}
+
+void dsp_clearFilter(void) {
+    dsp_setFilter(passthrough);
 }

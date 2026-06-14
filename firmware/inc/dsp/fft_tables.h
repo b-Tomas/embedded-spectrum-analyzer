@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fft.h"
+#include "dsp/dsp.h"
 
 #include <stdint.h>
 

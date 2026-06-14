@@ -1,6 +1,17 @@
 #pragma once
 
+#include "display/gfx.h"
+
 #include <stdint.h>
+
+/**
+ * @brief Possible filters that can be applied to modify the signal.
+ */
+typedef enum {
+    passthrough,
+    noiseSuppression,
+    customEqualized,
+} Filter;
 
 #define LOG2_PERIOD 10
 #define PERIOD      (1 << LOG2_PERIOD)
@@ -15,7 +26,7 @@
  * @param resultR  Output: real part of the frequency-domain result (Q15 scaled).
  * @param resultI  Output: imaginary part of the frequency-domain result (Q15 scaled).
  */
-void FFT(uint16_t* sourceT, int32_t* resultR, int32_t* resultI);
+void dsp_FFT(uint16_t* sourceT, int32_t* resultR, int32_t* resultI);
 
 /**
  * @brief Computes the inverse FFT, recovering the time-domain signal.
@@ -24,7 +35,7 @@ void FFT(uint16_t* sourceT, int32_t* resultR, int32_t* resultI);
  * @param sourceI  Input: imaginary part of the spectrum.
  * @param resultT  Output: reconstructed time-domain signal, divided by PERIOD.
  */
-void IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT);
+void dsp_IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT);
 
 /**
  * @brief Builds a rectangular frequency-domain filter with variable gain.
@@ -43,10 +54,28 @@ void buildFilter(int16_t* filterH, int binLow, int binHigh, int16_t magnitude);
 /**
  * @brief Multiplies the complex spectrum by a real filter H[k], in-place.
  *
- * @param resultR     Real part of the spectrum (modified in-place).
- * @param resultI     Imaginary part of the spectrum (modified in-place).
- * @param filterH Filter coefficients in Q15 format, length PERIOD.
+ * @param resultR   Real part of the spectrum (modified in-place).
+ * @param resultI   Imaginary part of the spectrum (modified in-place).
+ * @param filterH   Filter coefficients in Q15 format, length PERIOD.
  */
 void applyFilter(int32_t* resultR, int32_t* resultI, int16_t* filterH);
 
-// TODO: CONVERTIR DE IFFT A N_BINS PARA MOSTRAR COMO BARRA
+/**
+ * @brief Compress a int32_t array into uint8_t array. It used for adapt the signal for the display
+ *
+ * @param inputSignalBuffer A int32_t array containing the signal to be compressed
+ * @param outputCompressedBuffer a uint8_t array containing the bars values to update the display
+ */
+void dsp_compressSignal(const int32_t inputSignalBuffer[PERIOD],
+                        uint8_t outputCompressedBuffer[N_BARS]);
+
+/**
+ * @brief Selects one of the filters.
+ * @param filter The new filter to be applied.
+ */
+void dsp_setFilter(Filter filter);
+
+/**
+ * @brief Clear the filter.
+ */
+void dsp_clearFilter(void);

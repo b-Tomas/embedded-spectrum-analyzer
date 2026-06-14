@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dsp/dsp.h"
 #include "lpc_types.h"
 
 #include <stddef.h>
@@ -13,24 +14,7 @@ typedef enum {
     equalizerMode,
 } Mode;
 
-/**
- * @brief Possible filters that can be applied to modify the signal.
- */
-typedef enum {
-    passthrough,
-    noiseSuppression,
-    lowPass,
-    highPass,
-    bandPass,
-    bandReject,
-} Filter;
-
-extern FlagStatus flag_buildPassThroughFilter;
-extern FlagStatus flag_buildNoiseSuppressionFilter;
-extern FlagStatus flag_buildPassLowFilter;
-extern FlagStatus flag_buildPassHighFilter;
-extern FlagStatus flag_buildPassBandFilter;
-extern FlagStatus flag_buildRejectBandFilter;
+extern FlagStatus flag_readyToDisplay;
 
 /**
  * @brief The orchestrator struct.
@@ -110,14 +94,3 @@ void system_StartEqualizerMode(void);
  * @param mode the new mode.
  */
 void system_setMode(Mode mode);
-
-/**
- * @brief Selects one of the filters.
- * @param filter The new filter to be applied.
- */
-void setFilter(Filter filter);
-
-/**
- * @brief Clear the filter.
- */
-void clearFilter(void);

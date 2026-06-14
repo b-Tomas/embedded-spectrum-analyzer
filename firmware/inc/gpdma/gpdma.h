@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fft/fft.h"
+#include "dsp/dsp.h"
 #include "lpc17xx_gpdma.h"
 #include "lpc_types.h"
 
@@ -46,5 +46,5 @@ extern volatile int32_t DSP_IFFT_RESULT[PERIOD];
 /**
  * @brief Real time channel configuration structs.
  */
-extern GPDMA_Channel_CFG_T ChannelConfig_adc_buffer;
+extern GPDMA_Channel_CFG_T adc_buffer_channelCfg;
 extern GPDMA_Channel_CFG_T ChannelConfig_buffer_FFT;

@@ -1,3 +1,4 @@
+#pragma once
 
 /**
  * @brief ADC sampling rate.

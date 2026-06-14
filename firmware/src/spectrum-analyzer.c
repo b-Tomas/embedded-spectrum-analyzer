@@ -1,9 +1,12 @@
 #include "LPC17xx.h"
+#include "display/i2c_bus.h"
+#include "input/keyboard.h"
+#include "lpc17xx_exti.h"
 #include "lpc_types.h"
 #include "system.h"
-#include "test/it.h"
 
 #include <stdbool.h>
+#include <stdio.h>
 
 // Uncomment the line below to run all integration tests
 // TODO(b-Tomas): find a cleaner way to run tests
@@ -11,6 +14,7 @@
 
 int main(void) {
 #ifdef RUN_TESTS
+#include "test/it.h"
     it_run_all();
 #endif
 
@@ -18,38 +22,53 @@ int main(void) {
 
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {
-
         __WFI();
+
+        // Process keyboard input if any
+        char c;
+        while (kbd_pop(&c)) {
+            // TODO: process the keypress depending on the mode
+            printf("Key %c\n", c);
+            // switch (SYSTEM.mode) {
+            // case realTimeMode:
+            //   processKeyRealTimeMode();
+            // ...etc
+        }
+
         switch (SYSTEM.mode) {
         case realTimeMode:
             if (!SYSTEM.flag_ModeConfigured) {
                 configRealTimeMode();
                 SYSTEM.flag_ModeConfigured = SET;
             }
-
             executeRealTimeMode();
-
             break;
 
         case noiseSamplingMode:
             if (!SYSTEM.flag_ModeConfigured) {
                 SYSTEM.flag_ModeConfigured = SET;
                 configNoiseSamplingMode();
-                executeNoiseSamplingMode();
             }
-
+            executeNoiseSamplingMode();
             break;
 
         case equalizerMode:
             if (!SYSTEM.flag_ModeConfigured) {
                 SYSTEM.flag_ModeConfigured = SET;
                 configEqualizerMode();
-                executeEqualizerMode();
             }
-
+            executeEqualizerMode();
             break;
         }
     }
-
     return 0;
+}
+
+void EINT0_IRQHandler() {
+    kbd_irq_handler();
+    EXTI_ClearFlag(EXTI_EINT0);
+}
+
+void I2C0_IRQHandler() {
+    i2c_irq_handler();
 }

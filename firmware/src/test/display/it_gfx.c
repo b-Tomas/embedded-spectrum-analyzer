@@ -8,10 +8,10 @@
 void it_rotatingBars() {
     init_bars();
     uint8_t bars[10] = {10, 50, 32, 64, 20, 43, 9, 2, 60, 22};
-    for (int j = 0; j < sizeof(bars) * 10; j++) {
+    for (int j = 0; j < sizeof(bars) * 3; j++) {
         // while (1) {
         update_bars(bars);
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 20; i++) {
             it_delay();
         }
         const uint8_t barTmp = bars[0];

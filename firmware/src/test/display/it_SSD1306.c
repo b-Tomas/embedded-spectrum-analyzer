@@ -9,10 +9,6 @@
 // Width of the sweeping demo bar in pixels
 #define BAR_WIDTH 8
 
-void I2C0_IRQHandler(void) {
-    i2c_irq_handler();
-}
-
 /* Block until any async flush finishes so no frames are dropped. */
 static void flush_settle(void) {
     while (i2c_busy()) {

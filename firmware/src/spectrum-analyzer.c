@@ -62,7 +62,6 @@ int main(void) {
                 system_ConfigureSetting_EqualizerMode();
                 system_StartEqualizerMode();
             }
-
             break;
         }
     }

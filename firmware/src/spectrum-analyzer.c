@@ -6,6 +6,7 @@
 #include "system.h"
 
 #include <stdbool.h>
+#include <stdio.h>
 
 // Uncomment the line below to run all integration tests
 // TODO(b-Tomas): find a cleaner way to run tests
@@ -26,7 +27,12 @@ int main(void) {
         // Process keyboard input if any
         char c;
         while (kbd_pop(&c)) {
-            handleKey(c);
+            // TODO: process the keypress depending on the mode
+            printf("Key %c\n", c);
+            // switch (SYSTEM.mode) {
+            // case realTimeMode:
+            //   processKeyRealTimeMode();
+            // ...etc
         }
 
         switch (SYSTEM.mode) {

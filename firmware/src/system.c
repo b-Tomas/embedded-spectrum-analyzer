@@ -4,8 +4,6 @@
 #include "input/keyboard.h"
 #include "lpc_types.h"
 
-#include <stdio.h>
-
 /** @brief Global orchestrator instance. */
 System SYSTEM;
 
@@ -43,14 +41,6 @@ void executeEqualizerMode(void) {
 
 void changeEqualizer(const uint32_t* newEQBands) {
     // TODO: rewrite the EQUALIZER with the array that cointains the new EQ values.
-}
-
-void handleKey(char const sym) {
-    // TODO: process the keypress depending on the mode
-    printf("Key %c\n", sym);
-    // switch (SYSTEM.mode) {
-    // case realTimeMode:
-    //   ...etc
 }
 
 //=================================================================

@@ -30,7 +30,7 @@ void kbd_init() {
     GPIO_SetDir(PORT_2, 0x0F, GPIO_INPUT);
 }
 
-void kbd_push(uint8_t const sym) {
+void kbd_push(char const sym) {
     uint8_t const next = (kbd_buf.head + 1) & (KBD_BUFFER_SIZE - 1);
     if (next == kbd_buf.tail)
         return; // buffer is full

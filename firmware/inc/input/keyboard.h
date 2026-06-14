@@ -27,7 +27,7 @@ void kbd_irq_handler(void);
  *
  * @param sym the symbol to store
  */
-void kbd_push(uint8_t sym);
+void kbd_push(char sym);
 
 /**
  * @brief returns the oldest item in the buffer if any

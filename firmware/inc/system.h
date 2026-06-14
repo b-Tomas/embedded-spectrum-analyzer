@@ -83,12 +83,6 @@ void executeNoiseSamplingMode(void);
  */
 void executeEqualizerMode(void);
 
-/**
- * @brief handle a keypress depending on the current mode
- * @param sym the symbol to process
- */
-void handleKey(char sym);
-
 //=================================================================
 // Getters y Setters
 //=================================================================

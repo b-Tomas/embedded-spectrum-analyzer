@@ -1,13 +1,20 @@
 #include "system.h"
 
+#include "display/display.h"
+#include "input/keyboard.h"
 #include "lpc_types.h"
+
+#include <stdio.h>
 
 /** @brief Global orchestrator instance. */
 System SYSTEM;
 
-void systemInit(Mode mode) {
+void systemInit(Mode const mode) {
     setMode(mode);
-    // TODO: Call all the default peripheral config.
+    kbd_init();
+    display_init();
+    display_clearCanvas();
+    display_displayCanvas();
 }
 
 void configRealTimeMode(void) {
@@ -38,16 +45,24 @@ void changeEqualizer(const uint32_t* newEQBands) {
     // TODO: rewrite the EQUALIZER with the array that cointains the new EQ values.
 }
 
+void handleKey(uint8_t sym) {
+    // TODO: process the keypress depending on the mode
+    printf("Key %X\n", sym);
+    // switch (SYSTEM.mode) {
+    // case realTimeMode:
+    //   ...etc
+}
+
 //=================================================================
 // Getters y Setters
 //=================================================================
 
-void setMode(Mode mode) {
+void setMode(Mode const mode) {
     SYSTEM.mode = mode;
     SYSTEM.flag_ModeConfigured = RESET;
 }
 
-void setFilter(Filter filter) {
+void setFilter(Filter const filter) {
     SYSTEM.filter = filter;
 }
 

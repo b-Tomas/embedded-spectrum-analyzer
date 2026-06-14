@@ -2,8 +2,11 @@
 
 #include "LPC17xx.h"
 #include "adc/adc.h"
+#include "display/display.h"
+#include "display/gfx.h"
 #include "dsp/dsp.h"
 #include "gpdma/gpdma.h"
+#include "input/keyboard.h"
 #include "lpc17xx_adc.h"
 #include "lpc17xx_dac.h"
 #include "lpc17xx_gpdma.h"
@@ -24,6 +27,12 @@ void system_Init(Mode mode) {
     GPDMA_Init();
     ADC_Init(ADC_RATE);
     DAC_Init();
+    kbd_init();
+    display_init();
+    display_clearCanvas();
+    display_displayCanvas();
+    init_bars();
+
     // TODO: Call all the default peripheral config.
 }
 

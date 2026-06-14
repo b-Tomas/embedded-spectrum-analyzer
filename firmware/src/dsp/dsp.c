@@ -174,6 +174,7 @@ void applyFilter(int32_t* OmR, int32_t* OmI, int16_t* filterH) {
 
 void dsp_compressSignal(const int32_t inputSignalBuffer[PERIOD],
                         uint8_t outputCompressedBuffer[N_BARS]) {
+
     int32_t barSums[N_BARS];
     int base = PERIOD / N_BARS;
     int remainder = PERIOD % N_BARS;

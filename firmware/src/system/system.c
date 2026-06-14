@@ -68,58 +68,12 @@ void system_StartRealTimeMode(void) {
         FFT((uint16_t*)FFT_SOURCE_BUFFER_TIME, (int32_t*)DSP_FFT_RESULT_RE,
             (int32_t*)DSP_FFT_RESULT_IM);
 
-        /**< Supongo que la flag se levanta en el handler del teclado al estar en modo 1 al
-         * menos que sea el de noiseSuppression que se tendria que levantar en un handler
-         * diferente */
-        if (flag_buildPassThroughFilter || flag_buildNoiseSuppressionFilter ||
-            flag_buildPassLowFilter || flag_buildPassHighFilter || flag_buildPassBandFilter ||
-            flag_buildRejectBandFilter) {
-
-            switch (SYSTEM.filter) {
-            case passthrough:
-                /**< Pass all frequencies: bins 0–511, full gain */
-                buildFilter(FILTER_H, 0, (PERIOD / 2) - 1, Q15_ONE);
-                flag_buildPassThroughFilter = RESET;
-                break;
-            case noiseSuppression:
-
-                /**< TODO: No se como aplicar buildFilter() para una muestra de ruido*/
-                flag_buildNoiseSuppressionFilter = RESET;
-                break;
-            case lowPass:
-
-                /**< Pass 0–500 Hz → bins 0–15  (500/32 = 15.6 ≈ 15) */
-                buildFilter(FILTER_H, 0, 15, MAGNITUDE);
-                flag_buildPassLowFilter = RESET;
-                break;
-            case highPass:
-
-                /**< Pass 4 kHz–16 kHz → bins 125–511  (4000/32 = 125) */
-                buildFilter(FILTER_H, 125, (PERIOD / 2) - 1, MAGNITUDE);
-                flag_buildPassHighFilter = RESET;
-                break;
-            case bandPass:
-
-                /**< Pass 500 Hz–4 kHz → bins 16–124 */
-                buildFilter(FILTER_H, 16, 124, MAGNITUDE);
-                flag_buildPassBandFilter = RESET;
-                break;
-            case bandReject:
-
-                /**< Reject 500 Hz–4 kHz → bins 16–124, magnitude = 0
-                 *  DISCUSS: si hacemos que el usuario puedea seleccionar las bandas
-                 * Inside band = 0, outside band = Q15_ONE */
-                buildFilter(FILTER_H, 16, 124, 0);
-                flag_buildRejectBandFilter = RESET;
-                break;
-            }
-        }
-
         applyFilter((int32_t*)DSP_FFT_RESULT_RE, (int32_t*)DSP_FFT_RESULT_IM, (int16_t*)FILTER_H);
         IFFT((int32_t*)DSP_FFT_RESULT_RE, (int32_t*)DSP_FFT_RESULT_IM, (int32_t*)DSP_IFFT_RESULT);
 
         /**< Show in the display */
-        /** TODO: Mostrar por los displays */
+        /** TODO: Mostrar por los displays, considerar que no se tiene que ejecutar en cada
+         * instancia sino a una feq especifica*/
 
         flag_bufferReadyforFFT = RESET;
 

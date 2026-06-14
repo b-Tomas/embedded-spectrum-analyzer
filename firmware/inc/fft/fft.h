@@ -48,3 +48,5 @@ void buildFilter(int16_t* filterH, int binLow, int binHigh, int16_t magnitude);
  * @param filterH Filter coefficients in Q15 format, length PERIOD.
  */
 void applyFilter(int32_t* resultR, int32_t* resultI, int16_t* filterH);
+
+// TODO: CONVERTIR DE IFFT A N_BINS PARA MOSTRAR COMO BARRA

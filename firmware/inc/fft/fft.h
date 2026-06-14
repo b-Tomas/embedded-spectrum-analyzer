@@ -29,7 +29,7 @@ void IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT);
 /**
  * @brief Builds a rectangular frequency-domain filter with variable gain.
  *
- * Bins inside [binLow..binHigh] are set to @p magnitude; bins outside are set
+ * Bins inside [binLow..binHigh] are set to @param magnitude; bins outside are set
  * to (Q15_ONE - magnitude). The filter is filled symmetrically so that IFFT
  * returns a real signal.
  *
@@ -47,4 +47,4 @@ void buildFilter(int16_t* filterH, int binLow, int binHigh, int16_t magnitude);
  * @param resultI     Imaginary part of the spectrum (modified in-place).
  * @param filterH Filter coefficients in Q15 format, length PERIOD.
  */
-void applyFilter(int32_t* resultR, int32_t* resultI, const int16_t* filterH);
+void applyFilter(int32_t* resultR, int32_t* resultI, int16_t* filterH);

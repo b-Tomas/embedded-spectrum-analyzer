@@ -2,6 +2,7 @@
 
 #include "LPC17xx.h"
 #include "adc/adc.h"
+#include "fft/fft.h"
 #include "gpdma/gpdma.h"
 #include "lpc17xx_adc.h"
 #include "lpc17xx_dac.h"
@@ -13,6 +14,13 @@
 
 /** @brief Global orchestrator instance. */
 System SYSTEM;
+
+FlagStatus flag_buildPassThroughFilter = RESET;
+FlagStatus flag_buildNoiseSuppressionFilter = RESET;
+FlagStatus flag_buildPassLowFilter = RESET;
+FlagStatus flag_buildPassHighFilter = RESET;
+FlagStatus flag_buildPassBandFilter = RESET;
+FlagStatus flag_buildRejectBandFilter = RESET;
 
 void system_Init(Mode mode) {
     system_setMode(mode);
@@ -55,25 +63,73 @@ void system_ConfigureSetting_EqualizerMode() {
 
 void system_StartRealTimeMode(void) {
 
-    if (SYSTEM.filter != passthrough) {
-        if (flag_bufferReadyforFFT) {
+    if (SYSTEM.filter != passthrough && flag_bufferReadyforFFT) {
 
-            /** DSP_FFT(&DSP_INPUT_BUFFER, DSP_FFT_RESULT_RE, DSP_FFT_RESULT_IM); */
-            /** DSP_ApplyFilter() or could be DSP_ApplyFiler(&SYSTEM.filter) */
-            /** DSP_IFFT() */
-            flag_bufferReadyforFFT = RESET;
-            /** average the result for the DAC*/
-            uint32_t dacValue = bufferAverage(&DSP_IFFT_RESULT, 1024);
-            DAC_UpdateValue(dacValue);
+        FFT((uint16_t*)FFT_SOURCE_BUFFER_TIME, (int32_t*)DSP_FFT_RESULT_RE,
+            (int32_t*)DSP_FFT_RESULT_IM);
 
-        } else {
-            uint32_t adcSample = ADC_ChannelGetData(ADC_CHANNEL_0);
-            DAC_UpdateValue(adcSample);
-            /** display the signal
-             * Tomo el ultimo valor del ADC y lo cargo como una barra, desplazo el valor anterior
-             * hacia la derecha?
-             */
+        /**< Supongo que la flag se levanta en el handler del teclado al estar en modo 1 al
+         * menos que sea el de noiseSuppression que se tendria que levantar en un handler
+         * diferente */
+        if (flag_buildPassThroughFilter || flag_buildNoiseSuppressionFilter ||
+            flag_buildPassLowFilter || flag_buildPassHighFilter || flag_buildPassBandFilter ||
+            flag_buildRejectBandFilter) {
+
+            switch (SYSTEM.filter) {
+            case passthrough:
+                /**< Pass all frequencies: bins 0–511, full gain */
+                buildFilter(FILTER_H, 0, (PERIOD / 2) - 1, Q15_ONE);
+                flag_buildPassThroughFilter = RESET;
+                break;
+            case noiseSuppression:
+
+                /**< TODO: No se como aplicar buildFilter() para una muestra de ruido*/
+                flag_buildNoiseSuppressionFilter = RESET;
+                break;
+            case lowPass:
+
+                /**< Pass 0–500 Hz → bins 0–15  (500/32 = 15.6 ≈ 15) */
+                buildFilter(FILTER_H, 0, 15, MAGNITUDE);
+                flag_buildPassLowFilter = RESET;
+                break;
+            case highPass:
+
+                /**< Pass 4 kHz–16 kHz → bins 125–511  (4000/32 = 125) */
+                buildFilter(FILTER_H, 125, (PERIOD / 2) - 1, MAGNITUDE);
+                flag_buildPassHighFilter = RESET;
+                break;
+            case bandPass:
+
+                /**< Pass 500 Hz–4 kHz → bins 16–124 */
+                buildFilter(FILTER_H, 16, 124, MAGNITUDE);
+                flag_buildPassBandFilter = RESET;
+                break;
+            case bandReject:
+
+                /**< Reject 500 Hz–4 kHz → bins 16–124, magnitude = 0
+                 *  DISCUSS: si hacemos que el usuario puedea seleccionar las bandas
+                 * Inside band = 0, outside band = Q15_ONE */
+                buildFilter(FILTER_H, 16, 124, 0);
+                flag_buildRejectBandFilter = RESET;
+                break;
+            }
         }
+
+        applyFilter((int32_t*)DSP_FFT_RESULT_RE, (int32_t*)DSP_FFT_RESULT_IM, (int16_t*)FILTER_H);
+        IFFT((int32_t*)DSP_FFT_RESULT_RE, (int32_t*)DSP_FFT_RESULT_IM, (int32_t*)DSP_IFFT_RESULT);
+
+        /**< Show in the display */
+        /** TODO: Mostrar por los displays */
+
+        flag_bufferReadyforFFT = RESET;
+
+    } else {
+        uint32_t adcSample = ADC_ChannelGetData(ADC_CHANNEL_0);
+        DAC_UpdateValue(adcSample);
+        /** display the signal
+         * Tomo el ultimo valor del ADC y lo cargo como una barra, desplazo el valor anterior
+         * hacia la derecha?
+         */
     }
 }
 
@@ -96,19 +152,6 @@ void system_StartEqualizerMode(void) {
      * input the number -> display it -> confirm -> save it (in EQUALIZER)
      *
      */
-}
-
-uint32_t bufferAverage(volatile uint32_t* BUFFER_ADDRESS, size_t bufferSize) {
-    if (BUFFER_ADDRESS == NULL || bufferSize == 0) {
-        return 0u;
-    }
-
-    int64_t sum = 0;
-    for (size_t i = 0; i < bufferSize; i++) {
-        sum += BUFFER_ADDRESS[i];
-    }
-
-    return (uint32_t)(sum / (int64_t)bufferSize);
 }
 
 //=================================================================

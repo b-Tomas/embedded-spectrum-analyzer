@@ -1,6 +1,6 @@
-#include "fft.h"
+#include "fft/fft.h"
 
-#include "fft_tables.h"
+#include "fft/fft_tables.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -160,7 +160,7 @@ void buildFilter(int16_t* filterH, int binLow, int binHigh, int16_t magnitude) {
  * filterH es int16_t*: el clamp ya no es necesario (buildFilter garantiza
  * que todos los valores estén dentro del rango Q15).
  */
-void applyFilter(int32_t* OmR, int32_t* OmI, const int16_t* filterH) {
+void applyFilter(int32_t* OmR, int32_t* OmI, int16_t* filterH) {
     for (int i = 0; i < PERIOD; i++) {
         OmR[i] = mul_q15(OmR[i], filterH[i]);
         OmI[i] = mul_q15(OmI[i], filterH[i]);

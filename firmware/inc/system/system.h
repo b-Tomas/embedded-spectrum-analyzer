@@ -19,8 +19,18 @@ typedef enum {
 typedef enum {
     passthrough,
     noiseSuppression,
-    customEqualized,
+    lowPass,
+    highPass,
+    bandPass,
+    bandReject,
 } Filter;
+
+extern FlagStatus flag_buildPassThroughFilter;
+extern FlagStatus flag_buildNoiseSuppressionFilter;
+extern FlagStatus flag_buildPassLowFilter;
+extern FlagStatus flag_buildPassHighFilter;
+extern FlagStatus flag_buildPassBandFilter;
+extern FlagStatus flag_buildRejectBandFilter;
 
 /**
  * @brief The orchestrator struct.
@@ -90,15 +100,6 @@ void system_StartNoiseSamplingMode(void);
  * @note Must update EQUALIZER.
  */
 void system_StartEqualizerMode(void);
-
-/**
- * @brief average a buffer.
- *
- * @param BUFFER_ADDRESS destination of the buffer address to average it
- * @param bufferSize the buffer's size
- * @return the averaged values
- */
-uint32_t bufferAverage(volatile uint32_t* BUFFER_ADDRESS, size_t bufferSize);
 
 //=================================================================
 // Getters y Setters

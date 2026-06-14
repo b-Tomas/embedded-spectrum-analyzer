@@ -3,6 +3,11 @@
 #include "lpc17xx_gpdma.h"
 #include "lpc_types.h"
 
+//**< Arrayfor the filterH used in FFT */
+volatile int16_t FILTER_H[PERIOD];
+
+int16_t MAGNITUDE;
+
 /**
  * @brief  Memory address for the double-buffer. Used for real tieme configuration.
  * switching btween theirselft, the free buffer is used as source for FFT(...), will be transferred
@@ -19,27 +24,16 @@ volatile uint32_t SECOND_BUFFER_ADDRESS;
 FlagStatus flag_bufferReadyforFFT = RESET;
 
 /** Addresses for the input and output FFT buffers  */
-volatile uint32_t FFT_SOURCE_BUFFER_TIME;
-volatile uint32_t DSP_FFT_RESULT_RE;
-volatile uint32_t DSP_FFT_RESULT_IM;
+volatile uint16_t FFT_SOURCE_BUFFER_TIME[PERIOD];
+volatile int32_t DSP_FFT_RESULT_RE[PERIOD];
+volatile int32_t DSP_FFT_RESULT_IM[PERIOD];
 
-/** Addresses for the input and output IFFT buffers  */
+/** Address for the output IFFT buffers  */
+volatile int32_t DSP_IFFT_RESULT[PERIOD];
 
-volatile uint32_t DSP_IFFT_RESULT;
-volatile uint32_t IFFT_SOURCE_BUFFER_RE;
-volatile uint32_t IFFT_SOURCE_BUFFER_IM;
-
-/**
- * @brief LLI structs for ADC - Buffer.
- */
-GPDMA_LLI_T adc_firstBuffer_LLI;
-GPDMA_LLI_T adc_secondBuffer_LLI;
-
-/**
- * @brief LLI structs for buffer - FFT.
- */
-GPDMA_LLI_T firstBuffer_FFT_LLI;
-GPDMA_LLI_T secondBuffer_FFT_LLI;
+/** Forward declarations for circular LLI linked lists */
+extern GPDMA_LLI_T adc_firstBuffer_LLI;
+extern GPDMA_LLI_T secondBuffer_FFT_LLI;
 
 /**
  * Channel 7 configuration.
@@ -49,8 +43,8 @@ GPDMA_LLI_T secondBuffer_FFT_LLI;
  */
 
 GPDMA_LLI_T adc_secondBuffer_LLI = {
-    .srcAddr = (uint32_t)&LPC_ADC->ADGDR,
-    .dstAddr = (uint32_t)&SECOND_BUFFER_ADDRESS,
+    .srcAddr = (int32_t)&LPC_ADC->ADGDR,
+    .dstAddr = (int32_t)&SECOND_BUFFER_ADDRESS,
     .nextLLI = (uint32_t)&adc_firstBuffer_LLI,
     .control =
         (TRANSFER_SIZE_wBURST256 | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),

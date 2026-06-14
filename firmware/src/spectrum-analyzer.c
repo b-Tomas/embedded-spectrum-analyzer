@@ -24,9 +24,9 @@ int main(void) {
         __WFI();
 
         // Process keyboard input if any
-        uint8_t sym;
-        while (kbd_pop(&sym)) {
-            handleKey(sym);
+        char c;
+        while (kbd_pop(&c)) {
+            handleKey(c);
         }
 
         switch (SYSTEM.mode) {

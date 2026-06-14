@@ -7,12 +7,18 @@
 
 // Ring buffer to store keypresses
 typedef struct {
-    uint8_t data[KBD_BUFFER_SIZE]; // FIFO ring buffer
-    uint8_t head;                  // where the ISR will write next
-    uint8_t tail;                  // oldest unread item
+    char data[KBD_BUFFER_SIZE]; // FIFO ring buffer
+    uint8_t head;               // where the ISR will write next
+    uint8_t tail;               // oldest unread item
 } KBD_BUF_T;
 
 static volatile KBD_BUF_T kbd_buf = {0};
+
+// Look-up table for input code to symbol pressed mapping
+// The encoder outputs the coordinate of the key pressed, which does not
+// match the symbols printed in the keys
+static char const kbd_symbolLut[16] = {'*', '0', '#', 'D', '7', '8', '9', 'C',
+                                       '4', '5', '6', 'B', '1', '2', '3', 'A'};
 
 void kbd_init() {
     // Configure and enable interruputs for the DA (data available) line of the keyboard decoder
@@ -34,10 +40,10 @@ void kbd_push(uint8_t const sym) {
 }
 
 void kbd_irq_handler() {
-    kbd_push(GPIO_ReadValue(PORT_2) & 0x0F);
+    kbd_push(kbd_symbolLut[GPIO_ReadValue(PORT_2) & 0x0F]);
 }
 
-bool kbd_pop(uint8_t* sym) {
+bool kbd_pop(char* sym) {
     if (kbd_buf.head == kbd_buf.tail)
         return false; // buffer is empty
     // Return the tail of the ring buffer

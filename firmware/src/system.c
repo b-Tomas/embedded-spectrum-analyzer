@@ -45,9 +45,9 @@ void changeEqualizer(const uint32_t* newEQBands) {
     // TODO: rewrite the EQUALIZER with the array that cointains the new EQ values.
 }
 
-void handleKey(uint8_t sym) {
+void handleKey(char const sym) {
     // TODO: process the keypress depending on the mode
-    printf("Key %X\n", sym);
+    printf("Key %c\n", sym);
     // switch (SYSTEM.mode) {
     // case realTimeMode:
     //   ...etc

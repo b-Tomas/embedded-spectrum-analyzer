@@ -35,4 +35,4 @@ void kbd_push(uint8_t sym);
  * @param sym the key to process if any
  * @return whether key was returned
  */
-bool kbd_pop(uint8_t* sym);
+bool kbd_pop(char* sym);

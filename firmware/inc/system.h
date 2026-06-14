@@ -87,7 +87,7 @@ void executeEqualizerMode(void);
  * @brief handle a keypress depending on the current mode
  * @param sym the symbol to process
  */
-void handleKey(uint8_t sym);
+void handleKey(char sym);
 
 //=================================================================
 // Getters y Setters

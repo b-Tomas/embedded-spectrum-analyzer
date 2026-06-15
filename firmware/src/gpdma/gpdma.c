@@ -121,6 +121,7 @@ void gpdma_setupChannelForADC(GPDMA_Channel_CFG_T cfg) {
  */
 void gpdma_irq_handler(void) {
     if (GPDMA_IntGetStatus(GPDMA_INTTC, GPDMA_CH_7)) {
+        GPDMA_ClearIntPending(GPDMA_CLR_INTTC, GPDMA_CH_7);
         fft_half_ready = !fft_half_ready;
         flag_bufferReadyforFFT = SET;
     }

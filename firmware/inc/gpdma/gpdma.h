@@ -12,7 +12,7 @@
  * Toggled by the GPDMA CH7 terminal-count interrupt.
  * 0 = first half [0..PERIOD), 1 = second half [PERIOD..2*PERIOD).
  */
-extern volatile int fft_half_ready;
+extern volatile int flag_halfReady;
 
 /**
  * @brief Flag that indicates that the FFT input buffer is ready.

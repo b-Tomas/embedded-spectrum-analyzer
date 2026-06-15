@@ -6,14 +6,14 @@
 /* ---------------------------------------------------------------------------
  * DMA ping-pong index
  *
- * fft_half_ready is toggled by the CH7 terminal-count interrupt.
+ * flag_halfReady is toggled by the CH7 terminal-count interrupt.
  * It tells dsp_FFT() which half of FFT_SOURCE_BUFFER_TIME to consume.
  * Initialised to 1 so that the first toggle (1 -> 0) correctly selects
  * the first half, which is always the one filled by the initial CFG
  * transfer.
  * ---------------------------------------------------------------------------
  */
-volatile int fft_half_ready = 1;
+volatile int flag_halfReady = 1;
 
 /* ---------------------------------------------------------------------------
  * Buffer for ADC samples (double-buffered)
@@ -122,7 +122,7 @@ void gpdma_setupChannelForADC(GPDMA_Channel_CFG_T cfg) {
 void gpdma_irq_handler(void) {
     if (GPDMA_IntGetStatus(GPDMA_INTTC, GPDMA_CH_7)) {
         GPDMA_ClearIntPending(GPDMA_CLR_INTTC, GPDMA_CH_7);
-        fft_half_ready = !fft_half_ready;
+        flag_halfReady = !flag_halfReady;
         flag_bufferReadyforFFT = SET;
     }
 }

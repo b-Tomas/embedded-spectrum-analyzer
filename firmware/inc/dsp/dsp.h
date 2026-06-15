@@ -42,7 +42,7 @@ extern int16_t MAGNITUDE;
 /**
  * @brief Compute the in-place FFT of the ADC input.
  *
- * Reads from FFT_SOURCE_BUFFER_TIME (the half indicated by fft_half_ready),
+ * Reads from FFT_SOURCE_BUFFER_TIME (the half indicated by flag_halfReady),
  * centres the samples by subtracting ADC_CENTER, and writes the complex
  * spectrum to DSP_FFT_RESULT_RE / DSP_FFT_RESULT_IM.
  */

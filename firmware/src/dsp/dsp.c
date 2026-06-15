@@ -61,7 +61,7 @@ static void bit_reverse(int32_t* re, int32_t* im) {
 /* ---------------------------------------------------------------------------
  * dsp_FFT
  *
- * Reads FFT_SOURCE_BUFFER_TIME (the half indicated by fft_half_ready),
+ * Reads FFT_SOURCE_BUFFER_TIME (the half indicated by flag_halfReady),
  * centres the signal by subtracting ADC_CENTER, performs a radix-2 DIT FFT
  * in-place on the global DSP_FFT_RESULT_RE / DSP_FFT_RESULT_IM arrays,
  * and writes the complex spectrum back to the same arrays.
@@ -72,10 +72,10 @@ static void bit_reverse(int32_t* re, int32_t* im) {
 void dsp_FFT(void) {
     /*
      * Determine which half of the double buffer is ready.
-     * fft_half_ready is toggled by the CH7 TC interrupt; a read of a
+     * flag_halfReady is toggled by the CH7 TC interrupt; a read of a
      * volatile int is atomic on Cortex-M3.
      */
-    int half = fft_half_ready;
+    int half = flag_halfReady;
     volatile uint16_t* src = FFT_SOURCE_BUFFER_TIME + (half * PERIOD);
 
     /* Load and centre the time-domain samples. */

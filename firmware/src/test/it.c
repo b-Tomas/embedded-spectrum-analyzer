@@ -4,6 +4,7 @@
 #include "test/display/it_SSD1306.h"
 #include "test/display/it_display.h"
 #include "test/display/it_gfx.h"
+#include "test/gpdma/it_gpdma.h"
 
 #include <stdio.h>
 
@@ -29,7 +30,8 @@ void it_run_all(void) {
     /* Graphics engine */
     it_gfx_bars_run();
 
-    /* TODO(b-Tomas): Add other subsystems as they are implemented. */
+    /* GPDMA / ADC subsystem */
+    it_gpdma_run();
 
     printf("[IT] done\n");
 }

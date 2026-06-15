@@ -18,21 +18,17 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
       | * | 0 | # | D |
 ``` 
 
-Comportamiento del teclado
-  A: Cambia a Modo 1: Análisis del Espectro en Tiempo Real. 
-  B: Cambia a Modo 2: Muestreo de ruido. 
-  C: Cambia entre el Modo 3: Equalizador y el modo anterior a este. 
-  *: Aplica el filtro 1: passtrogh
-  #: Aplica el filtro 2: Suprime el ruido eléctrico. 
-  D: Aplica el filtro 3: Equalización
 
-> [!NOTE]
->
-> El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado (en decibeles).
->
-> Por cada banda puede atenuar como minimo -12 DB y amplificar como máxio 12 DB. Como el rango de frecuencias es de 0-16 kHz tomamos 10 bandas : 
->
-> 31.5 Hz – 63 Hz – 125 Hz – 250 Hz – 500 Hz – 1 kHz – 2 Hz – 4 kHz – 8 kHz – 16 kHz.
+
+> [!NOTE]  
+> **Comportamiento del teclado**:  
+>   A: Cambia a Modo 1: Análisis del Espectro en Tiempo Real.  
+>   B: Cambia a Modo 2: Muestreo de ruido.  
+>   C: Cambia entre el Modo 3: Equalizador y el modo anterior a este.  
+>   *: Aplica el filtro 1: passtrogh.  
+>   #: Aplica el filtro 2: Suprime el ruido eléctrico.  
+>   D: Aplica el filtro 3: Equalización.  
+
 
 <!-- Insertar gráficos -->
 
@@ -52,6 +48,34 @@ Comportamiento del teclado
 > - Tamaño de la FFT
 > - Utilización de memoria flash para almacenamiento?
 
+### Mapeo de frecuencias del display
+
+La entrada al ADC es una señal **real** (no compleja). La FFT produce un espectro simétrico:
+los bins `512..1023` son el espejo conjugado de los bins `511..0`.
+Por eso solo se usan los **primeros 512 bins** (0 a 511) para construir las barras.
+
+| Concepto | Valor |
+|----------|-------|
+| Frecuencia de muestreo (`ADC_RATE`) | 32768 Hz |
+| Tamaño de FFT (`PERIOD`) | 1024 |
+| Resolución espectral | 32768 / 1024 = **32 Hz/bin** |
+| Bins únicos usados | 512 (bins 0..511) |
+| Barras en pantalla (`N_BARS`) | 128 |
+| Bins por barra | 512 / 128 = **4** |
+| Ancho de banda por barra | 4 × 32 Hz = **128 Hz** |
+
+Cada barra `k` (0 a 127) cubre el rango `[k × 128, (k+1) × 128)` Hz.
+La frecuencia central aproximada es `k × 128 + 64` Hz.
+
+| Barra | Rango de frecuencia |
+|:-----:|---------------------|
+| 0 | 0 – 128 Hz |
+| 8 | 1,0 – 1,1 kHz |
+| 16 | 2,0 – 2,2 kHz |
+| 32 | 4,1 – 4,2 kHz |
+| 64 | 8,2 – 8,3 kHz |
+| 127 | 16,3 – 16,4 kHz (Nyquist) |
+
 ## Modo 2: Modo de muestreo de ruido
 
 1. Utilizando GPDMA se copian las muestras de señal del ADC a un doble buffer de procesamiento.
@@ -69,8 +93,11 @@ Comportamiento del teclado
 1. El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado.
 2. La configuración se guarda en la zona de memoria reservada para el filtro de ecualización.
 
-> [!NOTE]
-> - Definir bandas 
+> [!NOTE]  
+>  El usuario define la atenuación del filtro, previamente selccionado, mediante un teclado matricial, el usuario debe escribir el porcentaje de atenuació/intensidad a aplicar en ese filtro. Por ejemplo si está el fltro pasa bajos seleccionado y el usaurio introduce 50, refleja una atenuación del 50% a las frecuencias que correspondan.  
+> Las bandas son:  
+> `0-125` `125-250` `250-500` `500-1k` `1k-2k` `2k-4k` `4k-8k` `8k-16k` [Hz]
+>
 
 ## Requisitos
 

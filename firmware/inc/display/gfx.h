@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 // TODO(b-Tomas): wire with some global value for the amount of bands to show
-#define N_BARS 10
+#define N_BARS 128
 
 /**
  * @brief Initialize a bars graphic with all bars at 0

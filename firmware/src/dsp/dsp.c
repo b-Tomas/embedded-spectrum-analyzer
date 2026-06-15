@@ -76,7 +76,7 @@ void dsp_FFT(void) {
      * volatile int is atomic on Cortex-M3.
      */
     int half = fft_half_ready;
-    uint16_t* src = (uint16_t*)FFT_SOURCE_BUFFER_TIME + (half * PERIOD);
+    volatile uint16_t* src = FFT_SOURCE_BUFFER_TIME + (half * PERIOD);
 
     /* Load and centre the time-domain samples. */
     for (int i = 0; i < PERIOD; i++) {

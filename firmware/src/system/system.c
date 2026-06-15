@@ -23,7 +23,7 @@ FlagStatus flag_readyToDisplay = RESET;
 
 void system_Init(Mode mode) {
     system_setMode(mode);
-    GPDMA_Init();
+    gpdma_init();
     adc_init();
     DAC_Init();
     kbd_init();

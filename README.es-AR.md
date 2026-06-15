@@ -48,6 +48,34 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
 > - Tamaño de la FFT
 > - Utilización de memoria flash para almacenamiento?
 
+### Mapeo de frecuencias del display
+
+La entrada al ADC es una señal **real** (no compleja). La FFT produce un espectro simétrico:
+los bins `512..1023` son el espejo conjugado de los bins `511..0`.
+Por eso solo se usan los **primeros 512 bins** (0 a 511) para construir las barras.
+
+| Concepto | Valor |
+|----------|-------|
+| Frecuencia de muestreo (`ADC_RATE`) | 32768 Hz |
+| Tamaño de FFT (`PERIOD`) | 1024 |
+| Resolución espectral | 32768 / 1024 = **32 Hz/bin** |
+| Bins únicos usados | 512 (bins 0..511) |
+| Barras en pantalla (`N_BARS`) | 128 |
+| Bins por barra | 512 / 128 = **4** |
+| Ancho de banda por barra | 4 × 32 Hz = **128 Hz** |
+
+Cada barra `k` (0 a 127) cubre el rango `[k × 128, (k+1) × 128)` Hz.
+La frecuencia central aproximada es `k × 128 + 64` Hz.
+
+| Barra | Rango de frecuencia |
+|:-----:|---------------------|
+| 0 | 0 – 128 Hz |
+| 8 | 1,0 – 1,1 kHz |
+| 16 | 2,0 – 2,2 kHz |
+| 32 | 4,1 – 4,2 kHz |
+| 64 | 8,2 – 8,3 kHz |
+| 127 | 16,3 – 16,4 kHz (Nyquist) |
+
 ## Modo 2: Modo de muestreo de ruido
 
 1. Utilizando GPDMA se copian las muestras de señal del ADC a un doble buffer de procesamiento.

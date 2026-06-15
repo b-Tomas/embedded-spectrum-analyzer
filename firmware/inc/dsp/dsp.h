@@ -76,10 +76,15 @@ void applyFilter(void);
 /**
  * @brief Compute bar-height data ready for update_bars().
  *
+ * @note This function assumes PERIOD = 1024 and N_BARS = 128.
+ *       Only the first PERIOD/2 bins are unique (the input is real, so the
+ *       upper half is a conjugate mirror). Each bar averages 4 bins.
+ *       If these constants change, the averaging logic must be revisited.
+ *
  * Steps:
  *   1. If SYSTEM.filter != passthrough, call buildFilter() + applyFilter().
- *   2. Compute per-bin magnitude as abs(re) + abs(im).
- *   3. Average groups of (PERIOD / N_BARS) bins into N_BARS bars.
+ *   2. Compute per-bin magnitude as abs(re) + abs(im) for bins 0..PERIOD/2-1.
+ *   3. Average groups of (PERIOD/2 / N_BARS) bins into N_BARS bars.
  *   4. Dynamically normalise to [0, DISPLAY_HEIGHT].
  *
  * @param bars  Output array of length N_BARS, filled with display heights.

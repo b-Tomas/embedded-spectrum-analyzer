@@ -3,131 +3,125 @@
 #include "lpc17xx_gpdma.h"
 #include "lpc_types.h"
 
-//**< Arrayfor the filterH used in FFT */
-volatile int16_t FILTER_H[PERIOD];
-
-int16_t MAGNITUDE;
-
-/**
- * @brief  Memory address for the double-buffer. Used for real tieme configuration.
- * switching btween theirselft, the free buffer is used as source for FFT(...), will be transferred
- * by DMA
- * @warning. DISCUSS: El valor del ADC se va cargando en un primer buffer, cuando se llena, mediante
- * una interrupción, inicia a transferir al buffer que usa FFT(...). Mientras tanto se carga el
- * segundo buffer, no estoy seguro si realmente es suficiente para que termine FFT(...) sin
- * que ingresen nuevos datos del ADC. 1024 datos / ADC_RATE => 1204/32Khz = 0.03125 s. Esto es lo
- * que tarda en llenase el buffer conectado al ADC
+/* ---------------------------------------------------------------------------
+ * DMA ping-pong index
+ *
+ * fft_half_ready is toggled by the CH7 terminal-count interrupt.
+ * It tells dsp_FFT() which half of FFT_SOURCE_BUFFER_TIME to consume.
+ * Initialised to 1 so that the first toggle (1 -> 0) correctly selects
+ * the first half, which is always the one filled by the initial CFG
+ * transfer.
+ * ---------------------------------------------------------------------------
  */
-volatile uint32_t FIRST_BUFFER_ADDRESS;
-volatile uint32_t SECOND_BUFFER_ADDRESS;
+volatile int fft_half_ready = 1;
 
+/* ---------------------------------------------------------------------------
+ * Buffer for ADC samples (double-buffered)
+ *
+ * The GPDMA writes directly into this array using a two-entry linked
+ * list that alternates between [0..PERIOD) and [PERIOD..2*PERIOD).
+ * ---------------------------------------------------------------------------
+ */
+volatile uint16_t FFT_SOURCE_BUFFER_TIME[2 * PERIOD];
+
+/* ---------------------------------------------------------------------------
+ * Synchronisation flag – set by the CH7 TC interrupt, consumed by
+ * system_executeRealTimeMode().
+ * ---------------------------------------------------------------------------
+ */
 FlagStatus flag_bufferReadyforFFT = RESET;
 
-/** Addresses for the input and output FFT buffers  */
-volatile uint16_t FFT_SOURCE_BUFFER_TIME[PERIOD];
-volatile int32_t DSP_FFT_RESULT_RE[PERIOD];
-volatile int32_t DSP_FFT_RESULT_IM[PERIOD];
-
-/** Address for the output IFFT buffers  */
-volatile int32_t DSP_IFFT_RESULT[PERIOD];
-
-/** Forward declarations for circular LLI linked lists */
-extern GPDMA_LLI_T adc_firstBuffer_LLI;
-extern GPDMA_LLI_T secondBuffer_FFT_LLI;
-
-/**
- * Channel 7 configuration.
- * This channel transfers the ADC output to a memory buffer. It makes PERIOD trnansfers
- * until reconfigure, Once completed, it generates an interrupt [DISCUSS:] At that point,
- * we transfer the buffer (via DMA) to the one used by the FFT function.
+/* ---------------------------------------------------------------------------
+ * GPDMA channel-7 configuration
+ *
+ * Channel 7 transfers PERIOD halfwords from the ADC data register into
+ * FFT_SOURCE_BUFFER_TIME.  A two-entry linked list alternates between
+ * the first and second half of the buffer so that the CPU can process
+ * one half while the DMA fills the other.
+ * ---------------------------------------------------------------------------
  */
 
-GPDMA_LLI_T adc_secondBuffer_LLI = {
-    .srcAddr = (int32_t)&LPC_ADC->ADGDR,
-    .dstAddr = (int32_t)&SECOND_BUFFER_ADDRESS,
-    .nextLLI = (uint32_t)&adc_firstBuffer_LLI,
-    .control = (PERIOD | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
-};
+/* Forward declarations for the circular LLI chain. */
+extern GPDMA_LLI_T adc_secondHalf_LLI;
 
-GPDMA_LLI_T adc_firstBuffer_LLI = {
+/** LLI that writes the first half of the double buffer. */
+GPDMA_LLI_T adc_firstHalf_LLI = {
     .srcAddr = (uint32_t)&LPC_ADC->ADGDR,
-    .dstAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
-    .nextLLI = (uint32_t)&adc_secondBuffer_LLI,
+    .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME[0],
+    .nextLLI = (uint32_t)&adc_secondHalf_LLI,
     .control = (PERIOD | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
 };
 
-const GPDMA_Endpoint_T sourceCH7 = {
+/** LLI that writes the second half of the double buffer. */
+GPDMA_LLI_T adc_secondHalf_LLI = {
+    .srcAddr = (uint32_t)&LPC_ADC->ADGDR,
+    .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME[PERIOD],
+    .nextLLI = (uint32_t)&adc_firstHalf_LLI,
+    .control = (PERIOD | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
+};
+
+/** Source endpoint: ADC (no increment, halfword, burst = 1). */
+const GPDMA_Endpoint_T adc_sourceCH7 = {
     .width = GPDMA_HALFWORD,
     .burst = GPDMA_BSIZE_1,
     .increment = DISABLE,
 };
 
-const GPDMA_Endpoint_T destinationCH7 = {
+/** Destination endpoint: memory (increment, halfword, burst = 1). */
+const GPDMA_Endpoint_T adc_destCH7 = {
     .width = GPDMA_HALFWORD,
     .burst = GPDMA_BSIZE_1,
     .increment = ENABLE,
 };
 
-GPDMA_Channel_CFG_T adc_buffer_channelCfg = {
+/**
+ * Channel 7 configuration.
+ *
+ * The initial transfer writes PERIOD samples to the first half of
+ * FFT_SOURCE_BUFFER_TIME; subsequent transfers alternate via the
+ * linked-list chain above.
+ */
+GPDMA_Channel_CFG_T adc_buffer_CH_CFG = {
     .channelNum = GPDMA_CH_7,
     .transferSize = PERIOD,
     .type = GPDMA_P2M,
     .srcMemAddr = (uint32_t)&LPC_ADC->ADGDR,
-    .dstMemAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
+    .dstMemAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME[0],
     .srcConn = GPDMA_ADC,
-    .src = sourceCH7,
-    .dst = destinationCH7,
+    .src = adc_sourceCH7,
+    .dst = adc_destCH7,
     .intTC = ENABLE,
-    .linkedList = (uint32_t)&adc_secondBuffer_LLI,
+    .linkedList = (uint32_t)&adc_secondHalf_LLI,
 };
 
-/** Channel 6 configuration
-TODO(samuel): connection between the free buffer to the one used by FFT(...)
-*/
+/* ---------------------------------------------------------------------------
+ * GPDMA initialisation
+ *
+ * Only channel 7 is needed: ADC -> FFT_SOURCE_BUFFER_TIME.
+ * Channel 6 (previously used for an intermediate copy) is eliminated.
+ * ---------------------------------------------------------------------------
+ */
+void gpdma_init(void) {
+    GPDMA_Init();
+    gpdma_setupChannelForADC(adc_buffer_CH_CFG);
+    NVIC_EnableIRQ(DMA_IRQn);
+}
 
-const GPDMA_Endpoint_T endpointCH6 = {
-    .width = GPDMA_HALFWORD,
-    .burst = GPDMA_BSIZE_1,
-    .increment = ENABLE,
-};
+void gpdma_setupChannelForADC(GPDMA_Channel_CFG_T cfg) {
+    GPDMA_SetupChannel(&cfg);
+    GPDMA_ChannelStart(GPDMA_CH_7);
+}
 
-GPDMA_LLI_T firstBuffer_FFT_LLI = {
-    .srcAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
-    .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
-    .nextLLI = (uint32_t)&secondBuffer_FFT_LLI,
-    .control = (PERIOD | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
-};
-
-GPDMA_LLI_T secondBuffer_FFT_LLI = {
-    .srcAddr = (uint32_t)&SECOND_BUFFER_ADDRESS,
-    .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
-    .nextLLI = (uint32_t)&firstBuffer_FFT_LLI,
-    .control = (PERIOD | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
-    /** Once completed raise the flag that triggers the FFT() */
-};
-
-GPDMA_Channel_CFG_T ChannelConfig_buffer_FFT = {
-    .channelNum = GPDMA_CH_6,
-    .transferSize = PERIOD,
-    .type = GPDMA_M2M,
-    .srcMemAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
-    .dstMemAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
-    .src = endpointCH6,
-    .dst = endpointCH6,
-    .intTC = ENABLE,
-    // TODO: the mode 1 handler should be switching the buffers
-    .linkedList = 0 //(uint32_t)&secondBuffer_FFT_LLI,
-};
-
-void DMA_IRQHandler(void) {
+/* ---------------------------------------------------------------------------
+ * GPDMA interrupt handler
+ *
+ * Only CH7 is active.  On each terminal-count interrupt we toggle the
+ * half-ready indicator and signal the main loop.
+ * ---------------------------------------------------------------------------
+ */
+void gpdma_irq_handler(void) {
     if (GPDMA_IntGetStatus(GPDMA_INTTC, GPDMA_CH_7)) {
-        /** TODO: Sequence upon completion adc-buffer transfer */
-    }
-    if (GPDMA_IntGetStatus(GPDMA_INTTC, GPDMA_CH_6)) {
-        // stop transfer
-        /** TODO: Sequence upon completioon buffer to FFT's buffer
-         */
+        fft_half_ready = !fft_half_ready;
         flag_bufferReadyforFFT = SET;
     }
-    /* */
 }

@@ -22,10 +22,17 @@
 
 #pragma once
 
+#include "lpc17xx_timer.h"
+
 #include <stdint.h>
 
 #define DISPLAY_WIDTH  (OLED_WIDTH)
 #define DISPLAY_HEIGHT (OLED_HEIGHT)
+
+/** Timer prescaler for a 1 ms tick (TC counts every 100 us). */
+static const uint32_t TIM1_PRESCALE_1MS = 99;
+/** Match value for ≈30 Hz refresh (333 × 100 us = 33.3 ms). */
+static const uint32_t TIM1_MATCH_VALUE_30hz = 333;
 
 /**
  * Possible values of a pixel
@@ -40,8 +47,13 @@ typedef struct {
     uint8_t w, h, x, y;
 } Image;
 
+/** Timer configuration for the display refresh timer. */
+extern TIM_TIMERCFG_T tim1_dspl_cfg;
+/** Match configuration for the display refresh timer. */
+extern TIM_MATCHCFG_T tim1_dspl_matchcfg;
+
 /**
- * @brief initialize the display interface
+ * @brief initialize the display interface and the timer 1 to refresh it.
  */
 void display_init();
 

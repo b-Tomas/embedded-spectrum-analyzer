@@ -39,12 +39,6 @@ extern System SYSTEM;
 void system_Init(Mode mode);
 
 /**
- * @brief System non-configurable setting.
- * @details ADC, DAC GPDMA
- */
-void system_nonConfigurableSetting(void);
-
-/**
  * @brief System config for real time mode.
  * @details
  * - Configures the peripherals whose behaivor needs to be changed due to the new mode.
@@ -70,7 +64,7 @@ void system_ConfigureSetting_EqualizerMode(void);
  * @brief The implementation of the real time mode.
  * @details Process the signal and transfer it to the peripherals by DMA
  */
-void system_StartRealTimeMode(void);
+void system_executeRealTimeMode(void);
 
 /**
  * @brief The implementation of the noise sampling mode.

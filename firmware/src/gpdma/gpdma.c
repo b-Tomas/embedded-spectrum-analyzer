@@ -46,37 +46,35 @@ GPDMA_LLI_T adc_secondBuffer_LLI = {
     .srcAddr = (int32_t)&LPC_ADC->ADGDR,
     .dstAddr = (int32_t)&SECOND_BUFFER_ADDRESS,
     .nextLLI = (uint32_t)&adc_firstBuffer_LLI,
-    .control =
-        (TRANSFER_SIZE_wBURST256 | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
+    .control = (PERIOD | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
 };
 
 GPDMA_LLI_T adc_firstBuffer_LLI = {
     .srcAddr = (uint32_t)&LPC_ADC->ADGDR,
     .dstAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
     .nextLLI = (uint32_t)&adc_secondBuffer_LLI,
-    .control =
-        (TRANSFER_SIZE_wBURST256 | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
+    .control = (PERIOD | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
 };
 
 const GPDMA_Endpoint_T sourceCH7 = {
     .width = GPDMA_HALFWORD,
-    .burst = GPDMA_BSIZE_256,
+    .burst = GPDMA_BSIZE_1,
     .increment = DISABLE,
 };
 
 const GPDMA_Endpoint_T destinationCH7 = {
     .width = GPDMA_HALFWORD,
-    .burst = GPDMA_BSIZE_256,
+    .burst = GPDMA_BSIZE_1,
     .increment = ENABLE,
 };
 
 GPDMA_Channel_CFG_T adc_buffer_channelCfg = {
     .channelNum = GPDMA_CH_7,
-    .transferSize = TRANSFER_SIZE_wBURST256,
+    .transferSize = PERIOD,
     .type = GPDMA_P2M,
     .srcMemAddr = (uint32_t)&LPC_ADC->ADGDR,
     .dstMemAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
-    .dstConn = GPDMA_ADC,
+    .srcConn = GPDMA_ADC,
     .src = sourceCH7,
     .dst = destinationCH7,
     .intTC = ENABLE,
@@ -89,7 +87,7 @@ TODO(samuel): connection between the free buffer to the one used by FFT(...)
 
 const GPDMA_Endpoint_T endpointCH6 = {
     .width = GPDMA_HALFWORD,
-    .burst = GPDMA_BSIZE_256,
+    .burst = GPDMA_BSIZE_1,
     .increment = ENABLE,
 };
 
@@ -97,34 +95,36 @@ GPDMA_LLI_T firstBuffer_FFT_LLI = {
     .srcAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
     .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
     .nextLLI = (uint32_t)&secondBuffer_FFT_LLI,
-    .control = (TRANSFER_SIZE_wBURST256 | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
+    .control = (PERIOD | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
 };
 
 GPDMA_LLI_T secondBuffer_FFT_LLI = {
     .srcAddr = (uint32_t)&SECOND_BUFFER_ADDRESS,
     .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
     .nextLLI = (uint32_t)&firstBuffer_FFT_LLI,
-    .control = (TRANSFER_SIZE_wBURST256 | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
+    .control = (PERIOD | 1 << 18 | 1 << 21 | 1 << 26 | 1 << 27 | 1 << 31),
     /** Once completed raise the flag that triggers the FFT() */
 };
 
 GPDMA_Channel_CFG_T ChannelConfig_buffer_FFT = {
     .channelNum = GPDMA_CH_6,
-    .transferSize = TRANSFER_SIZE_wBURST256,
+    .transferSize = PERIOD,
     .type = GPDMA_M2M,
     .srcMemAddr = (uint32_t)&FIRST_BUFFER_ADDRESS,
     .dstMemAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME,
     .src = endpointCH6,
     .dst = endpointCH6,
     .intTC = ENABLE,
-    .linkedList = (uint32_t)&secondBuffer_FFT_LLI,
+    // TODO: the mode 1 handler should be switching the buffers
+    .linkedList = 0 //(uint32_t)&secondBuffer_FFT_LLI,
 };
 
-void GPDMA_IRQHandler(void) {
+void DMA_IRQHandler(void) {
     if (GPDMA_IntGetStatus(GPDMA_INTTC, GPDMA_CH_7)) {
         /** TODO: Sequence upon completion adc-buffer transfer */
     }
     if (GPDMA_IntGetStatus(GPDMA_INTTC, GPDMA_CH_6)) {
+        // stop transfer
         /** TODO: Sequence upon completioon buffer to FFT's buffer
          */
         flag_bufferReadyforFFT = SET;

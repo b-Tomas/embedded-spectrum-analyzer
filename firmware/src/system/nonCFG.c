@@ -24,6 +24,6 @@ TIM_MATCHCFG_T tim1_dspl_matchcfg = {
 
 /** After 33.3 ms (30 Hz), set the flag that allows the display to be updated*/
 void TIMER1_IRQHandler(void) {
-
+    TIM_ClearIntPending(LPC_TIM1, TIM_MR0_INT);
     flag_readyToDisplay = SET;
 }

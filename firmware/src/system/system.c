@@ -29,8 +29,6 @@ void system_Init(Mode mode) {
     DAC_Init();
     kbd_init();
     display_init();
-    display_clearCanvas();
-    display_displayCanvas();
     init_bars();
 
     // TODO: Call all the default peripheral config.
@@ -52,10 +50,12 @@ void system_nonConfigurableSetting(void) {
 
     /**< This channel transfers the ADC output to a memory buffer */
     GPDMA_SetupChannel(&adc_buffer_channelCfg);
+    NVIC_EnableIRQ(DMA_IRQn);
     GPDMA_ChannelStart(GPDMA_CH_7);
 
     /**< This channel transfers the previous buffer to the one used by the FFT implementation  */
     GPDMA_SetupChannel(&ChannelConfig_buffer_FFT);
+    GPDMA_ChannelStart(GPDMA_CH_6);
 
     /**< This channel transfers the FFT result to ****  */
     /** TODO: set up channel, dmaCfg struct, etc */
@@ -69,6 +69,8 @@ void system_nonConfigurableSetting(void) {
     /**< TIMER1 configuration */
     TIM_InitTimer(LPC_TIM1, &tim1_dspl_cfg);
     TIM_ConfigMatch(LPC_TIM1, &tim1_dspl_matchcfg);
+    NVIC_EnableIRQ(TIMER1_IRQn);
+    TIM_Enable(LPC_TIM1);
 }
 
 void system_ConfigureSetting_RealTimeMode(void) {}
@@ -82,6 +84,22 @@ void system_ConfigureSetting_EqualizerMode() {
 }
 
 void system_StartRealTimeMode(void) {
+    /* pseudocode:
+    if (!flag_bufferReadyforFFT) return;
+
+    fftRes = fft
+    switch filtro
+    case passthrough continue
+    case
+
+    if (flag_readyToDisplay) {
+        update_bars(parseFFTForDisplay(&fftRes));
+    }
+
+    dac(ifft(fftRes));
+
+    return;
+     */
 
     if (SYSTEM.filter != passthrough && flag_bufferReadyforFFT) {
 

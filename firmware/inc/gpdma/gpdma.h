@@ -7,11 +7,6 @@
 #include <stdint.h>
 
 /**
- * @brief buffer size (FFT).
- */
-#define TRANSFER_SIZE_wBURST256 4
-
-/**
  * @brief Memory addres for the buildFiler
  */
 extern volatile int16_t FILTER_H[PERIOD];

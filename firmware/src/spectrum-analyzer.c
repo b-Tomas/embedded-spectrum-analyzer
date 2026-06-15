@@ -1,7 +1,9 @@
 #include "LPC17xx.h"
 #include "display/i2c_bus.h"
+#include "gpdma/gpdma.h"
 #include "input/keyboard.h"
 #include "lpc17xx_exti.h"
+#include "lpc17xx_timer.h"
 #include "lpc_types.h"
 #include "system/system.h"
 
@@ -19,7 +21,6 @@ int main(void) {
 #endif
 
     system_Init(realTimeMode);
-    system_nonConfigurableSetting();
 
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {
@@ -43,7 +44,7 @@ int main(void) {
                 SYSTEM.flag_ModeConfigured = SET;
             }
 
-            system_StartRealTimeMode();
+            system_executeRealTimeMode();
 
             break;
 
@@ -76,4 +77,13 @@ void EINT0_IRQHandler() {
 
 void I2C0_IRQHandler() {
     i2c_irq_handler();
+}
+
+void TIMER1_IRQHandler(void) {
+    TIM_ClearIntPending(LPC_TIM1, TIM_MR0_INT);
+    flag_readyToDisplay = SET;
+}
+
+void DMA_IRQHandler(void) {
+    gpdma_irq_handler();
 }

@@ -7,39 +7,39 @@
 #include <stdint.h>
 
 /**
- * @brief Memory addres for the buildFiler
+ * @brief Ping-pong flag indicating which half of FFT_SOURCE_BUFFER_TIME is ready.
+ *
+ * Toggled by the GPDMA CH7 terminal-count interrupt.
+ * 0 = first half [0..PERIOD), 1 = second half [PERIOD..2*PERIOD).
  */
-extern volatile int16_t FILTER_H[PERIOD];
+extern volatile int fft_half_ready;
 
 /**
- * @brief Magnitude used in FFT
- * @note update by keyboard
- */
-extern int16_t MAGNITUDE;
-
-/**
- * @brief flag that indicates that the FFT input buffer is ready.
+ * @brief Flag that indicates that the FFT input buffer is ready.
  */
 extern FlagStatus flag_bufferReadyforFFT;
 
 /**
- * @brief Memory address for the FFT input buffer
+ * @brief Memory address for the FFT input buffer (double-buffered).
+ *
+ * The GPDMA CH7 writes ADC samples directly into this buffer using
+ * a ping-pong scheme:
+ *   - Even transfers go to [0 .. PERIOD-1]
+ *   - Odd  transfers go to [PERIOD .. 2*PERIOD-1]
  */
-extern volatile uint16_t FFT_SOURCE_BUFFER_TIME[PERIOD];
+extern volatile uint16_t FFT_SOURCE_BUFFER_TIME[2 * PERIOD];
 
 /**
- * @brief  Memory addresses for the results of the FFT (real and imaginary part)
+ * @brief Initialise the GPDMA interface.
  */
-extern volatile int32_t DSP_FFT_RESULT_RE[PERIOD];
-extern volatile int32_t DSP_FFT_RESULT_IM[PERIOD];
+void gpdma_init(void);
 
 /**
- * @brief  Memory address for the result of IFFT
+ * @brief Set up channel 7 for ADC-to-memory transfers.
  */
-extern volatile int32_t DSP_IFFT_RESULT[PERIOD];
+void gpdma_setupChannelForADC(GPDMA_Channel_CFG_T cfg);
 
 /**
- * @brief Real time channel configuration structs.
+ * @brief GPDMA interrupt handler (called by DMA_IRQHandler).
  */
-extern GPDMA_Channel_CFG_T adc_buffer_channelCfg;
-extern GPDMA_Channel_CFG_T ChannelConfig_buffer_FFT;
+void gpdma_irq_handler(void);

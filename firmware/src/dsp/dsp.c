@@ -4,26 +4,45 @@
 #include "display/display.h"
 #include "display/gfx.h"
 #include "dsp/fft_tables.h"
-#include "lpc17xx_gpdma.h"
+#include "gpdma/gpdma.h"
 #include "system/system.h"
 
 #include <stdint.h>
 #include <string.h>
 
-// ─── Buffers internos ───────────────────────────── ────────────────────────────
-static int32_t fft_re[PERIOD];
-static int32_t fft_im[PERIOD];
+/* ---------------------------------------------------------------------------
+ * Global DSP buffer definitions
+ *
+ * Declared extern in dsp.h; instantiated here so they live in the DSP
+ * translation unit.  No volatile qualifier because all access is CPU-side.
+ * ---------------------------------------------------------------------------
+ */
+int32_t DSP_FFT_RESULT_RE[PERIOD];
+int32_t DSP_FFT_RESULT_IM[PERIOD];
+int32_t DSP_IFFT_RESULT[PERIOD];
+int16_t FILTER_H[PERIOD];
+int16_t MAGNITUDE;
 
-// ─── mul Q15 ──────────────────────────────────────────────────────────────────
-// El compilador ARM emite SMULL para esta operación.
-// Con señal de amplitud 2047 y N=1024, el máximo acumulado en FFT es
-// 2047 * 1024 ≈ 2e6, muy por debajo del límite de int32_t (2.1e9).
+/* ---------------------------------------------------------------------------
+ * Q15 multiplication helper
+ *
+ * Performs (a * b) >> 15 with rounding.  The ARM compiler emits a single
+ * SMULL instruction for the wide multiply.
+ *
+ * With an input amplitude of 2047 and N = 1024, the worst-case FFT
+ * accumulation is 2047 * 1024 ≈ 2.1e6, well within int32_t range.
+ * ---------------------------------------------------------------------------
+ */
 static inline int32_t mul_q15(int32_t a, int16_t b) {
     return (int32_t)(((int64_t)a * (int32_t)b + 16384) >> 15);
 }
 
-// ─── Bit-reverse in-place ─────────────────────────────────────────────────────
-// Usa la tabla precomputada: un acceso a flash en lugar de 10 shifts/OR.
+/* ---------------------------------------------------------------------------
+ * In-place bit-reversal permutation
+ *
+ * Uses the precomputed bit-reversal table from fft_tables.c.
+ * ---------------------------------------------------------------------------
+ */
 static void bit_reverse(int32_t* re, int32_t* im) {
     for (int i = 0; i < PERIOD; i++) {
         unsigned int r = bit_rev_table[i];
@@ -39,21 +58,35 @@ static void bit_reverse(int32_t* re, int32_t* im) {
     }
 }
 
-// ─── FFT ──────────────────────────────────────────────────────────────────────
-// Convención estándar: sin escalado interno.
-// Con ADC de 12 bits (máx 2047 centrado) y N=1024, el peor caso es
-// 2047 * 1024 ≈ 2.1e6, que cabe holgadamente en int32_t (límite ≈ 2.1e9).
-//
-// Optimizaciones:
-//  - tw_sin[] eliminado; se usa tw_cos[(idx + 768) & 1023] = sin(idx)
-//  - tw_idx calculado con acumulador (elimina ~5120 multiplicaciones)
-void dsp_FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
-    for (int i = 0; i < PERIOD; i++) {
-        fft_re[i] = (int32_t)sourceT[i] - ADC_CENTER;
-        fft_im[i] = 0;
-    }
-    bit_reverse(fft_re, fft_im);
+/* ---------------------------------------------------------------------------
+ * dsp_FFT
+ *
+ * Reads FFT_SOURCE_BUFFER_TIME (the half indicated by fft_half_ready),
+ * centres the signal by subtracting ADC_CENTER, performs a radix-2 DIT FFT
+ * in-place on the global DSP_FFT_RESULT_RE / DSP_FFT_RESULT_IM arrays,
+ * and writes the complex spectrum back to the same arrays.
+ *
+ * No internal scaling is applied; the twiddle factors are Q15.
+ * ---------------------------------------------------------------------------
+ */
+void dsp_FFT(void) {
+    /*
+     * Determine which half of the double buffer is ready.
+     * fft_half_ready is toggled by the CH7 TC interrupt; a read of a
+     * volatile int is atomic on Cortex-M3.
+     */
+    int half = fft_half_ready;
+    volatile uint16_t* src = FFT_SOURCE_BUFFER_TIME + (half * PERIOD);
 
+    /* Load and centre the time-domain samples. */
+    for (int i = 0; i < PERIOD; i++) {
+        DSP_FFT_RESULT_RE[i] = (int32_t)src[i] - ADC_CENTER;
+        DSP_FFT_RESULT_IM[i] = 0;
+    }
+
+    bit_reverse(DSP_FFT_RESULT_RE, DSP_FFT_RESULT_IM);
+
+    /* Radix-2 decimation-in-time FFT, 10 stages. */
     for (int stage = 0; stage < LOG2_PERIOD; stage++) {
         int len = 1 << (stage + 1);
         int half = len >> 1;
@@ -62,37 +95,50 @@ void dsp_FFT(uint16_t* sourceT, int32_t* sourceR, int32_t* sourceI) {
         for (int k = 0; k < PERIOD; k += len) {
             int tw_idx = 0;
             for (int j = 0; j < half; j++, tw_idx += step) {
-                // wr = cos(2π·tw_idx/N),  wi = −sin(2π·tw_idx/N)
-                // sin(x) = cos(x − π/2)  →  índice offset = 3·N/4 = 768
+                /*
+                 * wr =  cos(2*pi * tw_idx / N)
+                 * wi = -sin(2*pi * tw_idx / N)
+                 *
+                 * sin(x) = cos(x - pi/2), so with tw_cos indexed by
+                 * (tw_idx + 3*N/4) & (N-1) we get cos(tw_idx - pi/2)
+                 * = sin(tw_idx) negated.
+                 */
                 int16_t wr = tw_cos[tw_idx];
                 int16_t wi = -tw_cos[(tw_idx + 3 * PERIOD / 4) & (PERIOD - 1)];
 
-                int32_t ur = fft_re[k + j];
-                int32_t ui = fft_im[k + j];
-                int32_t vr = fft_re[k + j + half];
-                int32_t vi = fft_im[k + j + half];
+                int32_t ur = DSP_FFT_RESULT_RE[k + j];
+                int32_t ui = DSP_FFT_RESULT_IM[k + j];
+                int32_t vr = DSP_FFT_RESULT_RE[k + j + half];
+                int32_t vi = DSP_FFT_RESULT_IM[k + j + half];
 
                 int32_t tr = mul_q15(vr, wr) - mul_q15(vi, wi);
                 int32_t ti = mul_q15(vr, wi) + mul_q15(vi, wr);
 
-                fft_re[k + j] = ur + tr;
-                fft_im[k + j] = ui + ti;
-                fft_re[k + j + half] = ur - tr;
-                fft_im[k + j + half] = ui - ti;
+                DSP_FFT_RESULT_RE[k + j] = ur + tr;
+                DSP_FFT_RESULT_IM[k + j] = ui + ti;
+                DSP_FFT_RESULT_RE[k + j + half] = ur - tr;
+                DSP_FFT_RESULT_IM[k + j + half] = ui - ti;
             }
         }
     }
 
-    memcpy(sourceR, fft_re, PERIOD * sizeof(int32_t));
-    memcpy(sourceI, fft_im, PERIOD * sizeof(int32_t));
+    /* Result is already in DSP_FFT_RESULT_RE / DSP_FFT_RESULT_IM – no memcpy. */
 }
 
-// ─── IFFT ─────────────────────────────────────────────────────────────────────
-// Sin escalado interno; divide por PERIOD al final (convención estándar).
-void dsp_IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT) {
-    memcpy(fft_re, sourceR, PERIOD * sizeof(int32_t));
-    memcpy(fft_im, sourceI, PERIOD * sizeof(int32_t));
-    bit_reverse(fft_re, fft_im);
+/* ---------------------------------------------------------------------------
+ * dsp_IFFT
+ *
+ * Reads the complex spectrum from DSP_FFT_RESULT_RE / DSP_FFT_RESULT_IM,
+ * performs a radix-2 inverse FFT in-place (using conjugate twiddle factors),
+ * divides by PERIOD, and writes the real time-domain result to
+ * DSP_IFFT_RESULT.
+ *
+ * The input arrays are modified during processing; call this only after
+ * dsp_computeMagnitudeBars has consumed the data for display.
+ * ---------------------------------------------------------------------------
+ */
+void dsp_IFFT(void) {
+    bit_reverse(DSP_FFT_RESULT_RE, DSP_FFT_RESULT_IM);
 
     for (int stage = 0; stage < LOG2_PERIOD; stage++) {
         int len = 1 << (stage + 1);
@@ -102,119 +148,140 @@ void dsp_IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT) {
         for (int k = 0; k < PERIOD; k += len) {
             int tw_idx = 0;
             for (int j = 0; j < half; j++, tw_idx += step) {
-                // wr = cos(2π·tw_idx/N),  wi = +sin(2π·tw_idx/N)  (signo IFFT)
+                /*
+                 * wr =  cos(2*pi * tw_idx / N)
+                 * wi = +sin(2*pi * tw_idx / N)  – positive sign for IFFT.
+                 */
                 int16_t wr = tw_cos[tw_idx];
                 int16_t wi = tw_cos[(tw_idx + 3 * PERIOD / 4) & (PERIOD - 1)];
 
-                int32_t ur = fft_re[k + j];
-                int32_t ui = fft_im[k + j];
-                int32_t vr = fft_re[k + j + half];
-                int32_t vi = fft_im[k + j + half];
+                int32_t ur = DSP_FFT_RESULT_RE[k + j];
+                int32_t ui = DSP_FFT_RESULT_IM[k + j];
+                int32_t vr = DSP_FFT_RESULT_RE[k + j + half];
+                int32_t vi = DSP_FFT_RESULT_IM[k + j + half];
 
                 int32_t tr = mul_q15(vr, wr) - mul_q15(vi, wi);
                 int32_t ti = mul_q15(vr, wi) + mul_q15(vi, wr);
 
-                fft_re[k + j] = ur + tr;
-                fft_im[k + j] = ui + ti;
-                fft_re[k + j + half] = ur - tr;
-                fft_im[k + j + half] = ui - ti;
+                DSP_FFT_RESULT_RE[k + j] = ur + tr;
+                DSP_FFT_RESULT_IM[k + j] = ui + ti;
+                DSP_FFT_RESULT_RE[k + j + half] = ur - tr;
+                DSP_FFT_RESULT_IM[k + j + half] = ui - ti;
             }
         }
     }
 
-    // Divide por N una sola vez al final (convención estándar IFFT)
+    /* Divide by N and keep only the real part. */
     for (int k = 0; k < PERIOD; k++) {
-        resultT[k] = fft_re[k] / PERIOD;
+        DSP_IFFT_RESULT[k] = DSP_FFT_RESULT_RE[k] / PERIOD;
     }
 }
 
-// ─── buildFilter ─────────────────────────────────────────────────────────────
-/*
- * Construye H[k] como un filtro de banda rectangular con magnitud variable.
+/* ---------------------------------------------------------------------------
+ * buildFilter
  *
- *   Dentro de [binLow .. binHigh]:  H[k] = magnitude
- *   Fuera  de [binLow .. binHigh]:  H[k] = Q15_ONE - magnitude
+ * Inspects SYSTEM.filter and fills FILTER_H accordingly.
  *
- * Casos particulares:
- *   Pasa bajo     → binLow=0,    binHigh=fc,   magnitude=Q15_ONE
- *   Pasa alto     → binLow=fc,   binHigh=N/2,  magnitude=Q15_ONE
- *   Pasa banda    → binLow=f1,   binHigh=f2,   magnitude=Q15_ONE
- *   Rechaza banda → binLow=f1,   binHigh=f2,   magnitude=0
+ * Currently only passthrough is implemented:
+ *   - All bins are set to Q15_ONE so that applyFilter becomes a no-op.
  *
- * El espectro se rellena simétricamente (bin k ↔ bin PERIOD-k)
- * para garantizar que la IFFT devuelva una señal real.
- *
- * filterH es int16_t* (antes int32_t*): ahorra la mitad de RAM y permite
- * que applyFilter omita el clamp en su hot path.
+ * noiseSuppression and customEqualized are reserved.
+ * ---------------------------------------------------------------------------
  */
-void buildFilter(int16_t* filterH, int binLow, int binHigh, int16_t magnitude) {
-    if (magnitude < 0)
-        magnitude = 0;
-    if (magnitude > Q15_ONE)
-        magnitude = Q15_ONE;
-    int16_t outside = (int16_t)(Q15_ONE - magnitude);
-    for (int i = 0; i < PERIOD; i++) {
-        int pos = i <= PERIOD / 2 ? i : PERIOD - i;
-        filterH[i] = (pos >= binLow && pos <= binHigh) ? magnitude : outside;
+void buildFilter(void) {
+    switch (SYSTEM.filter) {
+    case passthrough:
+        for (int i = 0; i < PERIOD; i++) {
+            FILTER_H[i] = Q15_ONE;
+        }
+        break;
+
+    case noiseSuppression:
+        break;
+    case customEqualized:
+        /** TODO: implement filter configuration for these modes. */
+        break;
     }
 }
 
-// ─── applyFilter ─────────────────────────────────────────────────────────────
-/*
- * Multiplica el espectro complejo (OmR + j*OmI) por H[k] real, in-place.
- * filterH es int16_t*: el clamp ya no es necesario (buildFilter garantiza
- * que todos los valores estén dentro del rango Q15).
+/* ---------------------------------------------------------------------------
+ * applyFilter
+ *
+ * Multiplies the complex spectrum (DSP_FFT_RESULT_RE + j * DSP_FFT_RESULT_IM)
+ * by the real filter FILTER_H, in-place.  The multiplication uses Q15
+ * arithmetic; buildFilter guarantees that all coefficients are within the
+ * valid Q15 range, so no clamping is required.
+ * ---------------------------------------------------------------------------
  */
-void applyFilter(int32_t* OmR, int32_t* OmI, int16_t* filterH) {
+void applyFilter(void) {
     for (int i = 0; i < PERIOD; i++) {
-        OmR[i] = mul_q15(OmR[i], filterH[i]);
-        OmI[i] = mul_q15(OmI[i], filterH[i]);
+        DSP_FFT_RESULT_RE[i] = mul_q15(DSP_FFT_RESULT_RE[i], FILTER_H[i]);
+        DSP_FFT_RESULT_IM[i] = mul_q15(DSP_FFT_RESULT_IM[i], FILTER_H[i]);
     }
 }
 
-void dsp_compressSignal(const int32_t inputSignalBuffer[PERIOD],
-                        uint8_t outputCompressedBuffer[N_BARS]) {
+/* ---------------------------------------------------------------------------
+ * dsp_computeMagnitudeBars
+ *
+ * Produces a uint8_t array suitable for update_bars() from the complex
+ * FFT spectrum.
+ *
+ * Algorithm:
+ *   1. If the active filter is not passthrough, build and apply it.
+ *   2. Magnitude per bin = |re| + |im|  (avoids expensive sqrt).
+ *   3. Group PERIOD bins into N_BARS averages (base = PERIOD / N_BARS = 8).
+ *   4. Dynamically normalise the bar heights to [0, DISPLAY_HEIGHT].
+ * ---------------------------------------------------------------------------
+ */
+void dsp_computeMagnitudeBars(uint8_t bars[N_BARS]) {
+    if (SYSTEM.filter != passthrough) {
+        buildFilter();
+        applyFilter();
+    }
 
+    /* ---- Per-bin magnitude approximation ---- */
+    int32_t mag[PERIOD];
+    for (int i = 0; i < PERIOD; i++) {
+        int32_t re = DSP_FFT_RESULT_RE[i];
+        int32_t im = DSP_FFT_RESULT_IM[i];
+        mag[i] = (re < 0 ? -re : re) + (im < 0 ? -im : im);
+    }
+
+    /* ---- Bin averaging (PERIOD / N_BARS = 8 samples per bar) ---- */
     int32_t barSums[N_BARS];
-    int base = PERIOD / N_BARS;
-    int remainder = PERIOD % N_BARS;
+    int base = PERIOD / N_BARS; /* 1024 / 128 = 8 */
     int idx = 0;
 
-    // ── Bin & average ──────────────────────────────────────────────────────
-    // Distribute PERIOD samples across N_BARS bins. The first `remainder`
-    // bins get one extra sample each.
     for (int bar = 0; bar < N_BARS; bar++) {
-        int count = base + (bar < remainder ? 1 : 0);
         int32_t sum = 0;
-        for (int j = 0; j < count; j++) {
-            int32_t v = inputSignalBuffer[idx++];
-            if (v < 0)
-                v = -v;
-            sum += v;
+        for (int j = 0; j < base; j++) {
+            sum += mag[idx++];
         }
-        barSums[bar] = sum / count;
+        barSums[bar] = sum / base;
     }
 
-    // ── Dynamic normalisation ──────────────────────────────────────────────
+    /* ---- Dynamic normalisation to [0, DISPLAY_HEIGHT] ---- */
     int32_t maxAvg = 0;
     for (int bar = 0; bar < N_BARS; bar++) {
-        if (barSums[bar] > maxAvg)
+        if (barSums[bar] > maxAvg) {
             maxAvg = barSums[bar];
+        }
     }
 
-    // Scale linearly to [0, DISPLAY_HEIGHT]
-    const uint8_t displayMax = DISPLAY_HEIGHT;
     if (maxAvg > 0) {
         for (int bar = 0; bar < N_BARS; bar++) {
-            uint8_t v = (uint8_t)((barSums[bar] * displayMax) / maxAvg);
-            outputCompressedBuffer[bar] = v > displayMax ? displayMax : v;
+            uint8_t v = (uint8_t)((barSums[bar] * DISPLAY_HEIGHT) / maxAvg);
+            bars[bar] = (v > DISPLAY_HEIGHT) ? DISPLAY_HEIGHT : v;
         }
     } else {
-        for (int bar = 0; bar < N_BARS; bar++)
-            outputCompressedBuffer[bar] = 0;
+        memset(bars, 0, N_BARS * sizeof(uint8_t));
     }
 }
 
+/* ---------------------------------------------------------------------------
+ * Filter selection helpers
+ * ---------------------------------------------------------------------------
+ */
 void dsp_setFilter(Filter filter) {
     SYSTEM.filter = filter;
 }

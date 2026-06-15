@@ -1,9 +1,26 @@
 #include "display/display.h"
 
 #include "display/SSD1306.h"
+#include "lpc17xx_timer.h"
 #include "lpc_types.h"
 
 #include <string.h>
+
+/** Timer configuration for the display refresh timer. */
+TIM_TIMERCFG_T tim1_dspl_cfg = {
+    .prescaleOpt = TIM_US,
+    .prescaleValue = TIM1_PRESCALE_1MS,
+};
+
+/** Match configuration for the display refresh timer. */
+TIM_MATCHCFG_T tim1_dspl_matchcfg = {
+    .channel = TIM_MATCH_0,
+    .intEn = ENABLE,
+    .stopEn = DISABLE,
+    .resetEn = ENABLE,
+    .extOpt = TIM_NOTHING,
+    .matchValue = TIM1_MATCH_VALUE_30hz,
+};
 
 /**
  * The 128x64 persistent canvas this module draws onto. It has the same format (packed) as
@@ -22,6 +39,12 @@ static framebufferData_t canvas;
 
 void display_init() {
     SSD1306_Init();
+
+    /**< TIMER1 configuration */
+    TIM_InitTimer(LPC_TIM1, &tim1_dspl_cfg);
+    TIM_ConfigMatch(LPC_TIM1, &tim1_dspl_matchcfg);
+    NVIC_EnableIRQ(TIMER1_IRQn);
+    TIM_Enable(LPC_TIM1);
 }
 
 void display_displayCanvas() {

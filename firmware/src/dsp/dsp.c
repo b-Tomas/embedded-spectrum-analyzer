@@ -226,10 +226,15 @@ void applyFilter(void) {
  * Produces a uint8_t array suitable for update_bars() from the complex
  * FFT spectrum.
  *
+ * NOTE: This function assumes PERIOD = 1024 and N_BARS = 128.
+ *       Only the first PERIOD/2 bins are unique (the input is real, so the
+ *       upper half is a conjugate mirror). Each bar averages 4 bins.
+ *       If these constants change, the averaging logic must be revisited.
+ *
  * Algorithm:
  *   1. If the active filter is not passthrough, build and apply it.
  *   2. Magnitude per bin = |re| + |im|  (avoids expensive sqrt).
- *   3. Group PERIOD bins into N_BARS averages (base = PERIOD / N_BARS = 8).
+ *   3. Group PERIOD/2 bins into N_BARS averages (base = 4).
  *   4. Dynamically normalise the bar heights to [0, DISPLAY_HEIGHT].
  * ---------------------------------------------------------------------------
  */
@@ -239,17 +244,19 @@ void dsp_computeMagnitudeBars(uint8_t bars[N_BARS]) {
         applyFilter();
     }
 
-    /* ---- Per-bin magnitude approximation ---- */
-    int32_t mag[PERIOD];
-    for (int i = 0; i < PERIOD; i++) {
+    int const nBins = PERIOD / 2;    /* bins 0..511 are unique */
+    int const base = nBins / N_BARS; /* 512 / 128 = 4 */
+
+    /* ---- Per-bin magnitude approximation (unique half only) ---- */
+    int32_t mag[nBins];
+    for (int i = 0; i < nBins; i++) {
         int32_t re = DSP_FFT_RESULT_RE[i];
         int32_t im = DSP_FFT_RESULT_IM[i];
         mag[i] = (re < 0 ? -re : re) + (im < 0 ? -im : im);
     }
 
-    /* ---- Bin averaging (PERIOD / N_BARS = 8 samples per bar) ---- */
+    /* ---- Bin averaging (base = 4 samples per bar) ---- */
     int32_t barSums[N_BARS];
-    int base = PERIOD / N_BARS; /* 1024 / 128 = 8 */
     int idx = 0;
 
     for (int bar = 0; bar < N_BARS; bar++) {

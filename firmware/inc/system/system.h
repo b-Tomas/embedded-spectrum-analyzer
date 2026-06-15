@@ -64,20 +64,20 @@ void system_ConfigureSetting_EqualizerMode(void);
  * @brief The implementation of the real time mode.
  * @details Process the signal and transfer it to the peripherals by DMA
  */
-void system_executeRealTimeMode(void);
+void system_tickRealTimeMode(void);
 
 /**
  * @brief The implementation of the noise sampling mode.
  * @details Process the signal and saves it for use as noise-suppression filter
  */
-void system_StartNoiseSamplingMode(void);
+void system_tickNoiseSamplingMode(void);
 
 /**
  * @brief The implementation of the equalizer mode.
  * @details UI experience to configure the gains bands
  * @note Must update EQUALIZER.
  */
-void system_StartEqualizerMode(void);
+void system_tickEqualizerMode(void);
 
 //=================================================================
 // Getters y Setters

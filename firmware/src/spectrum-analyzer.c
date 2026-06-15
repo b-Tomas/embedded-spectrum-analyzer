@@ -43,27 +43,23 @@ int main(void) {
                 system_ConfigureSetting_RealTimeMode();
                 SYSTEM.flag_ModeConfigured = SET;
             }
-
-            system_executeRealTimeMode();
-
+            system_tickRealTimeMode();
             break;
 
         case noiseSamplingMode:
             if (!SYSTEM.flag_ModeConfigured) {
                 SYSTEM.flag_ModeConfigured = SET;
                 system_ConfigureSetting_NoiseSamplingMode();
-                system_StartNoiseSamplingMode();
             }
-
+            system_tickNoiseSamplingMode();
             break;
 
         case equalizerMode:
             if (!SYSTEM.flag_ModeConfigured) {
                 SYSTEM.flag_ModeConfigured = SET;
                 system_ConfigureSetting_EqualizerMode();
-                system_StartEqualizerMode();
             }
-
+            system_tickEqualizerMode();
             break;
         }
     }

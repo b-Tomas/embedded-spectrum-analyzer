@@ -57,7 +57,7 @@ void system_ConfigureSetting_EqualizerMode(void) {
  *      OLED with update_bars().
  * ---------------------------------------------------------------------------
  */
-void system_executeRealTimeMode(void) {
+void system_tickRealTimeMode(void) {
     if (!flag_bufferReadyforFFT)
         return;
     flag_bufferReadyforFFT = RESET;
@@ -73,11 +73,11 @@ void system_executeRealTimeMode(void) {
     }
 }
 
-void system_StartNoiseSamplingMode(void) {
+void system_tickNoiseSamplingMode(void) {
     /** TODO: Noise-sampling mode implementation. */
 }
 
-void system_StartEqualizerMode(void) {
+void system_tickEqualizerMode(void) {
     /** TODO: Equaliser mode implementation. */
 }
 

@@ -8,9 +8,9 @@
  * @brief Possible filters that can be applied to modify the signal.
  */
 typedef enum {
-    passthrough,
-    noiseSuppression,
-    customEqualized,
+    passthrough,      /**< No filtering applied. */
+    noiseSuppression, /**< Noise-suppression filter (not yet implemented). */
+    customEqualized,  /**< User-defined equaliser filter (not yet implemented). */
 } Filter;
 
 #define LOG2_PERIOD 10
@@ -19,63 +19,80 @@ typedef enum {
 #define ADC_CENTER  2048
 #define Q15_ONE     32767
 
-/**
- * @brief Computes the in-place FFT of a real ADC input signal.
+/* ---------------------------------------------------------------------------
+ * Global DSP buffers
  *
- * @param sourceT  Input: time-domain ADC samples (uint16_t, length PERIOD).
- * @param resultR  Output: real part of the frequency-domain result (Q15 scaled).
- * @param resultI  Output: imaginary part of the frequency-domain result (Q15 scaled).
+ * These are moved here from gpdma.h because they are managed entirely
+ * by CPU-side DSP code (no DMA interaction).  The volatile qualifier is
+ * deliberately omitted for performance.
+ * ---------------------------------------------------------------------------
  */
-void dsp_FFT(uint16_t* sourceT, int32_t* resultR, int32_t* resultI);
+
+/** Real part of the FFT spectrum (also input to IFFT). */
+extern int32_t DSP_FFT_RESULT_RE[PERIOD];
+/** Imaginary part of the FFT spectrum (also input to IFFT). */
+extern int32_t DSP_FFT_RESULT_IM[PERIOD];
+/** Time-domain result of the inverse FFT (for DAC). */
+extern int32_t DSP_IFFT_RESULT[PERIOD];
+/** Frequency-domain filter coefficients (built by buildFilter). */
+extern int16_t FILTER_H[PERIOD];
+/** Gain parameter for the active filter (set by user input). */
+extern int16_t MAGNITUDE;
 
 /**
- * @brief Computes the inverse FFT, recovering the time-domain signal.
+ * @brief Compute the in-place FFT of the ADC input.
  *
- * @param sourceR  Input: real part of the spectrum (output of FFT or filtered).
- * @param sourceI  Input: imaginary part of the spectrum.
- * @param resultT  Output: reconstructed time-domain signal, divided by PERIOD.
+ * Reads from FFT_SOURCE_BUFFER_TIME (the half indicated by fft_half_ready),
+ * centres the samples by subtracting ADC_CENTER, and writes the complex
+ * spectrum to DSP_FFT_RESULT_RE / DSP_FFT_RESULT_IM.
  */
-void dsp_IFFT(int32_t* sourceR, int32_t* sourceI, int32_t* resultT);
+void dsp_FFT(void);
 
 /**
- * @brief Builds a rectangular frequency-domain filter with variable gain.
+ * @brief Compute the inverse FFT.
  *
- * Bins inside [binLow..binHigh] are set to @param magnitude; bins outside are set
- * to (Q15_ONE - magnitude). The filter is filled symmetrically so that IFFT
- * returns a real signal.
- *
- * @param filterH    Output buffer of length PERIOD (int16_t).
- * @param binLow     First bin of the passband (inclusive).
- * @param binHigh    Last bin of the passband (inclusive).
- * @param magnitude  Gain inside the band, in Q15 format (0..Q15_ONE).
+ * Reads the complex spectrum from DSP_FFT_RESULT_RE / DSP_FFT_RESULT_IM,
+ * performs the inverse transform in-place, and stores the real time-domain
+ * result (divided by PERIOD) in DSP_IFFT_RESULT.
  */
-void buildFilter(int16_t* filterH, int binLow, int binHigh, int16_t magnitude);
+void dsp_IFFT(void);
 
 /**
- * @brief Multiplies the complex spectrum by a real filter H[k], in-place.
+ * @brief Build a frequency-domain filter in FILTER_H based on SYSTEM.filter.
  *
- * @param resultR   Real part of the spectrum (modified in-place).
- * @param resultI   Imaginary part of the spectrum (modified in-place).
- * @param filterH   Filter coefficients in Q15 format, length PERIOD.
+ * - passthrough:     fill FILTER_H with Q15_ONE (no attenuation).
+ * - noiseSuppression: reserved.
+ * - customEqualized:  reserved.
  */
-void applyFilter(int32_t* resultR, int32_t* resultI, int16_t* filterH);
+void buildFilter(void);
 
 /**
- * @brief Compress a int32_t array into uint8_t array. It used for adapt the signal for the display
+ * @brief Multiply the complex spectrum by FILTER_H, in-place.
  *
- * @param inputSignalBuffer A int32_t array containing the signal to be compressed
- * @param outputCompressedBuffer a uint8_t array containing the bars values to update the display
+ * Operates on DSP_FFT_RESULT_RE / DSP_FFT_RESULT_IM.
  */
-void dsp_compressSignal(const int32_t inputSignalBuffer[PERIOD],
-                        uint8_t outputCompressedBuffer[N_BARS]);
+void applyFilter(void);
 
 /**
- * @brief Selects one of the filters.
- * @param filter The new filter to be applied.
+ * @brief Compute bar-height data ready for update_bars().
+ *
+ * Steps:
+ *   1. If SYSTEM.filter != passthrough, call buildFilter() + applyFilter().
+ *   2. Compute per-bin magnitude as abs(re) + abs(im).
+ *   3. Average groups of (PERIOD / N_BARS) bins into N_BARS bars.
+ *   4. Dynamically normalise to [0, DISPLAY_HEIGHT].
+ *
+ * @param bars  Output array of length N_BARS, filled with display heights.
+ */
+void dsp_computeMagnitudeBars(uint8_t bars[N_BARS]);
+
+/**
+ * @brief Select one of the predefined filters.
+ * @param filter The new filter to apply.
  */
 void dsp_setFilter(Filter filter);
 
 /**
- * @brief Clear the filter.
+ * @brief Reset the active filter to passthrough.
  */
 void dsp_clearFilter(void);

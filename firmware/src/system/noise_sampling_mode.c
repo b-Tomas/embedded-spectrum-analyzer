@@ -20,5 +20,5 @@ static void handleKey(char c) {
 static SystemMode_T noiseSamplingModeCfg = {init, deInit, tick, handleKey};
 
 void noiseSamplingMode_registerHooks() {
-    system_registerModeHooks(noiseSamplingMode, &noiseSamplingModeCfg);
+    system_registerMode(noiseSamplingMode, &noiseSamplingModeCfg);
 }

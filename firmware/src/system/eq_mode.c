@@ -85,5 +85,5 @@ static void handleKey(char const key) {
 static SystemMode_T eqModeCfg = {init, deInit, tick, handleKey};
 
 void eqMode_registerHooks() {
-    system_registerModeHooks(equalizerMode, &eqModeCfg);
+    system_registerMode(equalizerMode, &eqModeCfg);
 }

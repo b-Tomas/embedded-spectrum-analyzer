@@ -3,8 +3,6 @@
 #include "dsp/dsp.h"
 #include "lpc_types.h"
 
-#include <stddef.h>
-
 /**
  * @brief Available operation modes for the system.
  */
@@ -31,7 +29,10 @@ extern SystemMode_T MODES[_modeCount];
 /**
  * @brief for each mode to register its implementation
  */
-void system_registerModeHooks(Mode mode, SystemMode_T const* hooks);
+void system_registerMode(Mode mode, SystemMode_T const* hooks);
+void realTimeMode_registerHooks(void);
+void noiseSamplingMode_registerHooks(void);
+void eqMode_registerHooks(void);
 
 /**
  * @brief The orchestrator struct.

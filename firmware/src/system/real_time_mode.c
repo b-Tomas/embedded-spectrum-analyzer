@@ -47,5 +47,5 @@ static void handleKey(char c) {
 static SystemMode_T realTimeModeCfg = {init, deInit, tick, handleKey};
 
 void realTimeMode_registerHooks() {
-    system_registerModeHooks(realTimeMode, &realTimeModeCfg);
+    system_registerMode(realTimeMode, &realTimeModeCfg);
 }

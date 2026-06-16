@@ -90,14 +90,21 @@ La frecuencia central aproximada es `k × 128 + 64` Hz.
 
 ## Modo 3: Ecualización
 
-1. El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado.
+1. El usuario manualmente define la atenuación o ganancia de cada banda de frecuencia en la pantalla OLED utilizando el teclado:
+  - `4`: desplazar banda activa a la izquierda
+  - `6`: desplazar banda activa a la derecha
+  - `2`: incrementar el valor de la banda activa
+  - `8`: decrementar el valor de la banda activa
+  - `#`: guardar los cambios como filtro
+
 2. La configuración se guarda en la zona de memoria reservada para el filtro de ecualización.
 
-> [!NOTE]  
->  El usuario define la atenuación del filtro, previamente selccionado, mediante un teclado matricial, el usuario debe escribir el porcentaje de atenuació/intensidad a aplicar en ese filtro. Por ejemplo si está el fltro pasa bajos seleccionado y el usaurio introduce 50, refleja una atenuación del 50% a las frecuencias que correspondan.  
+> [!NOTE]
+>  
 > Las bandas son:  
-> `0-125` `125-250` `250-500` `500-1k` `1k-2k` `2k-4k` `4k-8k` `8k-16k` [Hz]
->
+> `0-125` `125-250` `250-500` `500-1k` `1k-2k` `2k-4k` `4k-8k` `8k-16k` [Hz] (TODO: confirm)
+> 
+> Cada decremento en las bandas representa una atenuación de X dB (TODO: confirm)
 
 ## Requisitos
 

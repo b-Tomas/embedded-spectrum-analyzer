@@ -11,7 +11,7 @@
 #define EQ_INC_DEC 16 /**< How much to increment or decrement each bar **/
 
 /**< User-configured values of EQ bands in a 0-255 scale **/
-uint8_t eq_bands[EQ_BANDS_N] = {255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+uint8_t eq_bands[EQ_BANDS_N] = {255, 255, 255, 255, 255, 255, 255, 255};
 
 /**< Currently selected band in the range of EQ_BANDS. Signed to identify overflow/underflow **/
 static int8_t curr_band;

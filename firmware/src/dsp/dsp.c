@@ -195,6 +195,50 @@ void buildFilter(uint16_t start_bin, uint16_t end_bin, int16_t magnitude) {
     }
 }
 
+void dsp_buildEqualizationFilter(void) {
+
+    if (SYSTEM.filter == customEqualized) {
+        printf("Already in EQ filter \n");
+        return;
+    }
+    dsp_setFilter(customEqualized);
+
+    printf("Changed to EQ filter \n");
+    /* Build one band at a time, mapping eq_bands[i] (0-255) to Q15. */
+    for (int i = 0; i < EQ_BANDS_N; i++) {
+        int16_t mag = (int16_t)(((int32_t)eq_bands[i] * Q15_ONE) / 255);
+        buildFilter(EQ_BAND_BINS[i][0], EQ_BAND_BINS[i][1], mag);
+    }
+    /* Mirror coefficients to the negative-frequency half (conjugate symmetry). */
+    for (int k = 1; k < PERIOD / 2; k++) {
+        FILTER_H[PERIOD - k] = FILTER_H[k];
+    }
+    printf("Build of the FILTER_H for the EQ filter is complete \n");
+}
+
+void dsp_buildNoiseSuppressionFilter(void) {
+    if (SYSTEM.filter == noiseSuppression) {
+        printf("Already in noise suppression filter");
+        return;
+    }
+    dsp_setFilter(noiseSuppression);
+
+    printf("Changed to nosie suppression filter \n");
+    /* TODO: Build FILTER_H using the noise suppression mode utils */
+}
+
+void dsp_buildPassthroughFilterd(void) {
+    if (SYSTEM.filter == passthrough) {
+        printf("Already in passtrough");
+        return;
+    }
+    dsp_setFilter(passthrough);
+
+    printf("Changed to passthrough filter \n");
+    buildFilter(0, PERIOD - 1, Q15_ONE);
+    printf("Build of the FILTER_H passthrough filter is complete \n");
+}
+
 /* ---------------------------------------------------------------------------
  * applyFilter
  *

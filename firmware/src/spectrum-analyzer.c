@@ -5,6 +5,7 @@
 #include "lpc17xx_exti.h"
 #include "lpc17xx_timer.h"
 #include "lpc_types.h"
+#include "system/eq_mode.h"
 #include "system/system.h"
 
 #include <stdbool.h>
@@ -29,12 +30,14 @@ int main(void) {
         // Process keyboard input if any
         char c;
         while (kbd_pop(&c)) {
-            // TODO: process the keypress depending on the mode
-            printf("Key %c\n", c);
-            // switch (SYSTEM.mode) {
-            // case realTimeMode:
-            //   processKeyRealTimeMode();
-            // ...etc
+            printf("pressed key %c\n", c);
+            switch (SYSTEM.mode) {
+            case equalizerMode:
+                system_processKeyEqualizerMode(c);
+                break;
+            default:
+                break;
+            }
         }
 
         switch (SYSTEM.mode) {

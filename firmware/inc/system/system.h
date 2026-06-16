@@ -53,14 +53,6 @@ void system_ConfigureSetting_RealTimeMode(void);
 void system_ConfigureSetting_NoiseSamplingMode(void);
 
 /**
- * @brief System config for equalizer mode.
- * @details
- * - Configures the peripherals whose behavior needs to be changed due to the new mode.
- * - Disable the triggers for other modes.
- */
-void system_ConfigureSetting_EqualizerMode(void);
-
-/**
  * @brief The implementation of the real time mode.
  * @details Process the signal and transfer it to the peripherals by DMA
  */
@@ -71,13 +63,6 @@ void system_tickRealTimeMode(void);
  * @details Process the signal and saves it for use as noise-suppression filter
  */
 void system_tickNoiseSamplingMode(void);
-
-/**
- * @brief The implementation of the equalizer mode.
- * @details UI experience to configure the gains bands
- * @note Must update EQUALIZER.
- */
-void system_tickEqualizerMode(void);
 
 //=================================================================
 // Getters y Setters

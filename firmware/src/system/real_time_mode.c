@@ -75,14 +75,12 @@ static void tick(void) {
         update_bars(bars);
     }
     dsp_IFFT();
-    for (int i = 0; i < PERIOD; i++) {
-        DAC_UpdateValue(DSP_IFFT_RESULT[i]);
-    }
+    /** TODO: DAC format and output */
 }
 
 static void handleKey(char c) {
     switch (c) {
-    case 'D': {
+    case '1': {
         printf("Changed to custom filter \n");
         /* Build one band at a time, mapping eq_bands[i] (0-255) to Q15. */
         for (int i = 0; i < EQ_BANDS_N; i++) {
@@ -96,16 +94,16 @@ static void handleKey(char c) {
         printf("Build of the FILTER_H for the EQ filter is complete \n");
         break;
     }
-    case '#':
+    case '2':
         printf("Changed to nosie suppression filter \n");
-        /* TODO: zero FILTER_H then call buildFilter() for the suppression range */
+        /* TODO: Build FILTER_H using the noise suppression mode utils */
         break;
-    case '*':
+    case '3':
         printf("Changed to passthrough filter \n");
         buildFilter(0, PERIOD - 1, Q15_ONE);
         break;
     default:
-        printf("Esa tecla no hace nada bro");
+        printf("system_processKeyRealTimeModekey: Tecla=%c no hace nada bro\n");
         break;
     }
 }

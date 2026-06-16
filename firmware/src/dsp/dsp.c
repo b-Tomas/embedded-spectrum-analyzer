@@ -24,6 +24,9 @@ int32_t DSP_IFFT_RESULT[PERIOD];
 int16_t FILTER_H[PERIOD];
 int16_t MAGNITUDE;
 
+void dps_init() {
+    buildFilter(0, PERIOD - 1, Q15_ONE);
+}
 /* ---------------------------------------------------------------------------
  * Q15 multiplication helper
  *

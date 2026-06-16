@@ -40,6 +40,11 @@ extern int16_t FILTER_H[PERIOD];
 extern int16_t MAGNITUDE;
 
 /**
+ * @brief initialize the digital singal processing interface
+ */
+void dps_init();
+
+/**
  * @brief Compute the in-place FFT of the ADC input.
  *
  * Reads from FFT_SOURCE_BUFFER_TIME (the half indicated by flag_halfReady),

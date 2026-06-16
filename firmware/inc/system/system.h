@@ -34,7 +34,6 @@ void eqMode_registerHooks(void);
 /**
  * @brief The orchestrator struct.
  * @details Contains de state variables.
- * @note flag_ModeExecuted is used in the sate machine.
  */
 typedef struct {
     Mode mode;                      /**< Current operational mode. */

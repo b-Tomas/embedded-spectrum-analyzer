@@ -26,7 +26,7 @@ void system_init(Mode const mode) {
     kbd_init();
     // Initialize the given mode
     system_setMode(mode);
-    gpdma_init();
+    dsp_init();
 }
 
 void system_setMode(Mode const mode) {

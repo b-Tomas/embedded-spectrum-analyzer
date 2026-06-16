@@ -40,9 +40,10 @@ extern int16_t FILTER_H[PERIOD];
 extern int16_t MAGNITUDE;
 
 /**
- * @brief initialize the digital singal processing interface
+ * @brief initialize the digital singal processing interface.
+ * set the filter as passthrough and initialize FILTER_H for it.
  */
-void dps_init();
+void dsp_init();
 
 /**
  * @brief Compute the in-place FFT of the ADC input.

@@ -7,8 +7,8 @@
 #include "gpdma/gpdma.h"
 #include "system/system.h"
 
-#include <cstdio>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 /* ---------------------------------------------------------------------------

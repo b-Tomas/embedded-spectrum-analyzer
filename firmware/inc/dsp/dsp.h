@@ -18,7 +18,7 @@ typedef enum {
 #define ADC_MAX     4095
 #define ADC_CENTER  2048
 #define Q15_ONE     32767
-
+#define N_SAMPLES    10
 /* ---------------------------------------------------------------------------
  * Global DSP buffers
  *
@@ -36,6 +36,8 @@ extern int32_t DSP_FFT_RESULT_IM[PERIOD];
 extern int32_t DSP_IFFT_RESULT[PERIOD];
 /** Frequency-domain filter coefficients (built by buildFilter). */
 extern int16_t FILTER_H[PERIOD];
+/** Noise Sampling Buffer */
+extern int32_t NOISE_SAMPLES[PERIOD];
 /** Gain parameter for the active filter (set by user input). */
 extern int16_t MAGNITUDE;
 

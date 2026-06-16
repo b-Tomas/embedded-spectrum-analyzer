@@ -30,6 +30,7 @@ int main(void) {
         // Process keyboard input if any
         char c;
         while (kbd_pop(&c)) {
+<<<<<<< Updated upstream
             printf("pressed key %c\n", c);
             if (c == 'A' || c == 'B' || c == 'C') {
                 // Change mode if applicable
@@ -60,6 +61,10 @@ int main(void) {
                     break;
                 }
             }
+=======
+            // TODO: process the keypress depending on the mode
+            printf("Key %c\n", c);
+>>>>>>> Stashed changes
         }
 
         switch (SYSTEM.mode) {
@@ -91,18 +96,25 @@ int main(void) {
     return 0;
 }
 
-void EINT0_IRQHandler() {
+void EINT0_IRQHandler(void) {
     kbd_irq_handler();
     EXTI_ClearFlag(EXTI_EINT0);
 }
 
-void I2C0_IRQHandler() {
+void I2C0_IRQHandler(void) {
     i2c_irq_handler();
 }
 
+/* Fires at the configured display refresh rate. */
+void TIMER0_IRQHandler(void) {
+    flag_SamplingCooldownReady = SET;
+    TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
+}
+
+/* Fires at the configured display refresh rate. */
 void TIMER1_IRQHandler(void) {
-    TIM_ClearIntPending(LPC_TIM1, TIM_MR0_INT);
     flag_readyToDisplay = SET;
+    TIM_ClearIntPending(LPC_TIM1, TIM_MR0_INT);
 }
 
 void DMA_IRQHandler(void) {

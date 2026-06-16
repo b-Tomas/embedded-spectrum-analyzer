@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-#define N_SAMPLES      8
+#define N_SAMPLES 8
 #define COOLDOWN_TICKS 10
 
 /**
@@ -19,15 +19,14 @@ typedef enum {
 
 extern FlagStatus flag_readyToDisplay;
 extern FlagStatus flag_SamplingCooldownReady;
-
 /**
  * @brief The orchestrator struct.
- * @details Contains the state variables.
- * @note flag_ModeConfigured is used in the state machine.
+ * @details Contains de state variabes.
+ * @note flag_ModeExecuted is used in the sate machine.
  */
 typedef struct {
     Mode mode;                      /**< Current operational mode. */
-    FlagStatus flag_ModeConfigured; /**< Flag to prevent re-configuration. */
+    FlagStatus flag_ModeConfigured; /**< Flag to prevent re-configuration */
     Filter filter;                  /**< Active signal filter. */
 } System;
 
@@ -37,58 +36,43 @@ typedef struct {
 extern System SYSTEM;
 
 /**
- * @brief System initialisation.
- * @param mode The mode in which the system starts.
+ * @brief System init.
+ * @param mode The mode in which system inits.
  */
 void system_Init(Mode mode);
 
 /**
- * @brief System configuration for real-time mode.
+ * @brief System config for real time mode.
  * @details
- * - Configures the peripherals whose behavior needs to change for this mode.
+ * - Configures the peripherals whose behaivor needs to be changed due to the new mode.
  * - Applies the appropriate filter.
  */
 void system_ConfigureSetting_RealTimeMode(void);
 
 /**
- * @brief System configuration for noise sampling mode.
- * @details Configures the peripherals whose behavior needs to change for this mode.
+ * @brief System config for noise sampling mode.
+ * @details Configures the peripherals whose behaivor needs to be changed due to the new mode.
  */
 void system_ConfigureSetting_NoiseSamplingMode(void);
 
 /**
- * @brief System config for equalizer mode.
- * @details
- * - Configures the peripherals whose behavior needs to be changed due to the new mode.
- * - Disable the triggers for other modes.
- */
-void system_ConfigureSetting_EqualizerMode(void);
-
-/**
- * @brief Real-time mode tick.
- * @details Processes the signal and transfers it to the peripherals via DMA.
+ * @brief The implementation of the real time mode.
+ * @details Process the signal and transfer it to the peripherals by DMA
  */
 void system_tickRealTimeMode(void);
 
 /**
- * @brief Noise sampling mode tick.
- * @details Processes the signal and saves it for use as a noise-suppression filter.
+ * @brief The implementation of the noise sampling mode.
+ * @details Process the signal and saves it for use as noise-suppression filter
  */
 void system_tickNoiseSamplingMode(void);
 
-/**
- * @brief The implementation of the equalizer mode.
- * @details UI experience to configure the gains bands
- * @note Must update EQUALIZER.
- */
-void system_tickEqualizerMode(void);
-
-/* ==========================================================================
- * Getters and Setters
- * ========================================================================== */
+//=================================================================
+// Getters y Setters
+//=================================================================
 
 /**
  * @brief Sets a new operational mode.
- * @param mode The new mode.
+ * @param mode the new mode.
  */
 void system_setMode(Mode mode);

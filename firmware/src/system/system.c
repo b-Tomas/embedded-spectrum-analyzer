@@ -13,27 +13,16 @@
 #include "lpc17xx_timer.h"
 #include "lpc_types.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 /** @brief Global orchestrator instance. */
 System SYSTEM;
 
-FlagStatus flag_readyToDisplay        = RESET;
+FlagStatus flag_readyToDisplay = RESET;
 FlagStatus flag_noiseSamplingDone     = RESET;
-FlagStatus flag_SamplingCooldownReady = RESET;
 
-<<<<<<< Updated upstream
 void system_Init(Mode const mode) {
-=======
-/* ---------------------------------------------------------------------------
- * System initialisation
- * ---------------------------------------------------------------------------
- */
-void system_Init(Mode mode) {
->>>>>>> Stashed changes
     system_setMode(mode);
     display_init();
     adc_init();
@@ -42,39 +31,18 @@ void system_Init(Mode mode) {
     kbd_init();
 }
 
-/* ---------------------------------------------------------------------------
- * Mode configuration
- * ---------------------------------------------------------------------------
- */
 void system_ConfigureSetting_RealTimeMode(void) {
-<<<<<<< Updated upstream
     init_bars();
-=======
-    /* TODO: Display behaviour */
->>>>>>> Stashed changes
 }
 
 void system_ConfigureSetting_NoiseSamplingMode(void) {
-    /* Configure TIM0 to raise flag_SamplingCooldownReady at a fixed interval. */
-    TIM_TIMERCFG_T cfgTIM0 = {TIM_US, 100};
-    TIM_MATCHCFG_T cfgMAT0 = {
-        TIM_MATCH_0,
-        ENABLE,
-        DISABLE,
-        ENABLE,
-        TIM_NOTHING,
-        COOLDOWN_TICKS
-    };
-    TIM_Init(LPC_TIM0, TIM_TIMER_MODE, &cfgTIM0);
-    TIM_ConfigMatch(LPC_TIM0, &cfgMAT0);
-    TIM_Cmd(LPC_TIM0, ENABLE);
-    NVIC_EnableIRQ(TIMER0_IRQn);
+    /* TODO: ADC / GPDMA / display reconfiguration. */
 }
 
 /* ---------------------------------------------------------------------------
  * Real-time mode execution
  *
- * Called repeatedly from the main-loop state machine. When the GPDMA
+ * Called repeatedly from the main-loop state machine.  When the GPDMA
  * completes a PERIOD-sized ADC transfer it sets flag_bufferReadyforFFT;
  * this function consumes it:
  *
@@ -101,6 +69,75 @@ void system_tickRealTimeMode(void) {
     }
 }
 
+#include "system/system.h"
+
+#include "LPC17xx.h"
+#include "adc/adc.h"
+#include "display/display.h"
+#include "display/gfx.h"
+#include "dsp/dsp.h"
+#include "gpdma/gpdma.h"
+#include "input/keyboard.h"
+#include "lpc17xx_adc.h"
+#include "lpc17xx_dac.h"
+#include "lpc17xx_gpdma.h"
+#include "lpc17xx_timer.h"
+#include "lpc_types.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+/** @brief Global orchestrator instance. */
+System SYSTEM;
+
+FlagStatus flag_readyToDisplay = RESET;
+
+void system_Init(Mode const mode) {
+    system_setMode(mode);
+    display_init();
+    adc_init();
+    gpdma_init();
+    DAC_Init();
+    kbd_init();
+}
+
+void system_ConfigureSetting_RealTimeMode(void) {
+    init_bars();
+}
+
+void system_ConfigureSetting_NoiseSamplingMode(void) {
+    /* TODO: ADC / GPDMA / display reconfiguration. */
+}
+
+/* ---------------------------------------------------------------------------
+ * Real-time mode execution
+ *
+ * Called repeatedly from the main-loop state machine.  When the GPDMA
+ * completes a PERIOD-sized ADC transfer it sets flag_bufferReadyforFFT;
+ * this function consumes it:
+ *
+ *   1. dsp_FFT()  – transforms the time-domain samples into the frequency
+ *                   domain (complex spectrum in DSP_FFT_RESULT_RE/IM).
+ *   2. If the display timer has fired (flag_readyToDisplay), produce a
+ *      set of bar heights via dsp_computeMagnitudeBars() and update the
+ *      OLED with update_bars().
+ * ---------------------------------------------------------------------------
+ */
+void system_tickRealTimeMode(void) {
+    if (!flag_bufferReadyforFFT)
+        return;
+    flag_bufferReadyforFFT = RESET;
+
+    dsp_FFT();
+
+    if (flag_readyToDisplay) {
+        flag_readyToDisplay = RESET;
+
+        uint8_t bars[N_BARS];
+        dsp_computeMagnitudeBars(bars);
+        update_bars(bars);
+    }
+}
 /* ---------------------------------------------------------------------------
  * Noise sampling mode execution
  *
@@ -138,25 +175,25 @@ void system_tickNoiseSamplingMode(void) {
          * dsp_FFT() subtracts ADC_CENTER internally, so we add it back here
          * so the net input to the FFT is exactly NOISE_SAMPLES[i]. */
         volatile uint16_t *src = FFT_SOURCE_BUFFER_TIME + (flag_halfReady * PERIOD);
-        for (int i = 0; i < PERIOD; i++) {
+        for (int i = 0; i < (PERIOD/2); i++) {
             src[i] = (uint16_t)(NOISE_SAMPLES[i] + ADC_CENTER);
         }
 
         dsp_FFT();
 
         /* Compute per-bin magnitude (|re| + |im|) and the global average. */
-        int32_t mag[PERIOD];
+        int32_t mag[PERIOD/2];
         int32_t magSum = 0;
-        for (int i = 0; i < PERIOD; i++) {
+        for (int i = 0; i < (PERIOD/2); i++) {
             int32_t re = DSP_FFT_RESULT_RE[i];
             int32_t im = DSP_FFT_RESULT_IM[i];
             mag[i]  = (re < 0 ? -re : re) + (im < 0 ? -im : im);
             magSum += mag[i];
         }
-        int32_t magAvg = magSum / PERIOD;
+        int32_t magAvg = magSum / (PERIOD/2);
 
         /* Binary mask: 0 where noise dominates (above average), Q15_ONE elsewhere. */
-        for (int i = 0; i < PERIOD; i++) {
+        for (int i = 0; i < PERIOD/2; i++) {
             NOISE_SAMPLES[i] = (mag[i] > magAvg) ? 0 : Q15_ONE;
         }
 
@@ -166,7 +203,7 @@ void system_tickNoiseSamplingMode(void) {
 
     /* Stage 1: accumulate N_SAMPLES complete buffers. */
     if (sampleCount < N_SAMPLES) {
-        if (bufferIndex < PERIOD) {
+        if (bufferIndex < PERIOD/2) {
             NOISE_SAMPLES[bufferIndex] += ADC_GlobalGetData();
             bufferIndex++;
         } else {
@@ -176,7 +213,7 @@ void system_tickNoiseSamplingMode(void) {
 
     /* Stage 1b: element-wise average. */
     } else {
-        if (bufferIndex < PERIOD) {
+        if (bufferIndex < PERIOD/2) {
             NOISE_SAMPLES[bufferIndex] /= N_SAMPLES;
             bufferIndex++;
         } else {
@@ -184,24 +221,12 @@ void system_tickNoiseSamplingMode(void) {
         }
     }
 }
-
-<<<<<<< Updated upstream
 void system_setMode(Mode const mode) {
-=======
-/* ---------------------------------------------------------------------------
- * Equalizer mode execution
- * ---------------------------------------------------------------------------
- */
-void system_tickEqualizerMode(void) {
-    /* TODO: Equaliser mode implementation. */
+    SYSTEM.mode = mode;
+    SYSTEM.flag_ModeConfigured = RESET;
 }
 
-/* ---------------------------------------------------------------------------
- * Mode setter
- * ---------------------------------------------------------------------------
- */
-void system_setMode(Mode mode) {
->>>>>>> Stashed changes
+void system_setMode(Mode const mode) {
     SYSTEM.mode = mode;
     SYSTEM.flag_ModeConfigured = RESET;
 }

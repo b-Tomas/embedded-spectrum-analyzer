@@ -5,7 +5,6 @@
 #include "system/eq_mode.h"
 #include "system/system.h"
 
-#include <cstdio>
 #include <stdint.h>
 #include <stdio.h>
 

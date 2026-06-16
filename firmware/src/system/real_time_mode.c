@@ -5,6 +5,7 @@
 #include "system/eq_mode.h"
 #include "system/system.h"
 
+#include <cstdio>
 #include <stdint.h>
 
 /**
@@ -81,8 +82,8 @@ static void tick(void) {
 
 static void handleKey(char c) {
     switch (c) {
-    case 'D': { /**<Changed to custom eq filter*/
-
+    case 'D': {
+        printf("Changed to custom filter \n");
         /* Build one band at a time, mapping eq_bands[i] (0-255) to Q15. */
         for (int i = 0; i < EQ_BANDS_N; i++) {
             int16_t mag = (int16_t)(((int32_t)eq_bands[i] * Q15_ONE) / 255);
@@ -92,17 +93,19 @@ static void handleKey(char c) {
         for (int k = 1; k < PERIOD / 2; k++) {
             FILTER_H[PERIOD - k] = FILTER_H[k];
         }
+        printf("Build of the FILTER_H for the EQ filter is complete \n");
         break;
     }
-    case '#': /**< Changed to noise suppression filter */
-
+    case '#':
+        printf("Changed to nosie suppression filter \n");
         /* TODO: zero FILTER_H then call buildFilter() for the suppression range */
         break;
-    case '*': /**<Changed to passthrough filter */
-
+    case '*':
+        printf("Changed to passthrough filter \n");
         buildFilter(0, PERIOD - 1, Q15_ONE);
         break;
     default:
+        printf("Esa tecla no hace nada bro");
         break;
     }
 }

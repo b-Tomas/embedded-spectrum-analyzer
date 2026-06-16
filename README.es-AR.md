@@ -21,14 +21,10 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
 
 
 > [!NOTE]  
-> **Comportamiento del teclado**:  
+> **Comportamiento del global del teclado**:  
 >   A: Cambia a Modo 1: Análisis del Espectro en Tiempo Real.  
 >   B: Cambia a Modo 2: Muestreo de ruido.  
->   C: Cambia entre el Modo 3: Equalizador y el modo anterior a este.  
->   *: Aplica el filtro 1: passtrogh.  
->   #: Aplica el filtro 2: Suprime el ruido eléctrico.  
->   D: Aplica el filtro 3: Equalización.  
-
+>   C: Cambia entre el Modo 3: Equalizador
 
 <!-- Insertar gráficos -->
 
@@ -41,13 +37,10 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
 5. Un segundo canal del GPDMA emite la señal a través del DAC. La salida del DAC se conecta a un aplificador operacional, permitiendo emitir la señal como sonido con una bocina pasiva.
 6. En paralelo y a una frecuencia menor se visualiza el espectro de frecuencias resultante en una pantalla OLED conectada por I2C.
 
-> [!NOTE]
->
-> Decidir:
-> - Frecuencia de muestreo
-> - Tamaño de la FFT
-> - Utilización de memoria flash para almacenamiento?
-
+  El usuario manualmente establece el filtro a aplicar utilizando el teclado:  
+  - `1`: Aplicar el filtro de ecualización.  
+  - `2`: Aplicar filtro de supresión de ruido.  
+  - `3`: Aplicar el filtro de paso directo.  
 ### Mapeo de frecuencias del display
 
 La entrada al ADC es una señal **real** (no compleja). La FFT produce un espectro simétrico:
@@ -74,7 +67,10 @@ La frecuencia central aproximada es `k × 128 + 64` Hz.
 | 16 | 2,0 – 2,2 kHz |
 | 32 | 4,1 – 4,2 kHz |
 | 64 | 8,2 – 8,3 kHz |
-| 127 | 16,3 – 16,4 kHz (Nyquist) |
+| 127 | 16,3 – 16,4 kHz (Nyquist) |  
+
+
+
 
 ## Modo 2: Modo de muestreo de ruido
 

@@ -8,6 +8,7 @@
 #include "system/system.h"
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 /* ---------------------------------------------------------------------------
@@ -23,6 +24,10 @@ int32_t DSP_IFFT_RESULT[PERIOD];
 int16_t FILTER_H[PERIOD];
 int16_t MAGNITUDE;
 
+void dsp_init() {
+    buildFilter(0, PERIOD - 1, Q15_ONE);
+    dsp_setFilter(passthrough);
+}
 /* ---------------------------------------------------------------------------
  * Q15 multiplication helper
  *
@@ -180,28 +185,58 @@ void dsp_IFFT(void) {
 /* ---------------------------------------------------------------------------
  * buildFilter
  *
- * Inspects SYSTEM.filter and fills FILTER_H accordingly.
- *
- * Currently only passthrough is implemented:
- *   - All bins are set to Q15_ONE so that applyFilter becomes a no-op.
- *
- * noiseSuppression and customEqualized are reserved.
+ * Sets FILTER_H[i] = magnitude for i in [start_bin, end_bin] (inclusive).
+ * Bins outside the range are left unchanged.
  * ---------------------------------------------------------------------------
  */
-void buildFilter(void) {
-    switch (SYSTEM.filter) {
-    case passthrough:
-        for (int i = 0; i < PERIOD; i++) {
-            FILTER_H[i] = Q15_ONE;
-        }
-        break;
-
-    case noiseSuppression:
-        break;
-    case customEqualized:
-        /** TODO: implement filter configuration for these modes. */
-        break;
+void buildFilter(uint16_t start_bin, uint16_t end_bin, int16_t magnitude) {
+    for (uint16_t i = start_bin; i <= end_bin; i++) {
+        FILTER_H[i] = magnitude;
     }
+}
+
+void dsp_buildEqualizationFilter(void) {
+
+    if (SYSTEM.filter == customEqualized) {
+        printf("Already in EQ filter \n");
+        return;
+    }
+    dsp_setFilter(customEqualized);
+
+    printf("Changed to EQ filter \n");
+    /* Build one band at a time, mapping eq_bands[i] (0-255) to Q15. */
+    for (int i = 0; i < EQ_BANDS_N; i++) {
+        int16_t mag = (int16_t)(((int32_t)eq_bands[i] * Q15_ONE) / 255);
+        buildFilter(EQ_BAND_BINS[i][0], EQ_BAND_BINS[i][1], mag);
+    }
+    /* Mirror coefficients to the negative-frequency half (conjugate symmetry). */
+    for (int k = 1; k < PERIOD / 2; k++) {
+        FILTER_H[PERIOD - k] = FILTER_H[k];
+    }
+    printf("Build of the FILTER_H for the EQ filter is complete \n");
+}
+
+void dsp_buildNoiseSuppressionFilter(void) {
+    if (SYSTEM.filter == noiseSuppression) {
+        printf("Already in noise suppression filter");
+        return;
+    }
+    dsp_setFilter(noiseSuppression);
+
+    printf("Changed to nosie suppression filter \n");
+    /* TODO: Build FILTER_H using the noise suppression mode utils */
+}
+
+void dsp_buildPassthroughFilterd(void) {
+    if (SYSTEM.filter == passthrough) {
+        printf("Already in passtrough");
+        return;
+    }
+    dsp_setFilter(passthrough);
+
+    printf("Changed to passthrough filter \n");
+    buildFilter(0, PERIOD - 1, Q15_ONE);
+    printf("Build of the FILTER_H passthrough filter is complete \n");
 }
 
 /* ---------------------------------------------------------------------------
@@ -232,18 +267,15 @@ void applyFilter(void) {
  *       If these constants change, the averaging logic must be revisited.
  *
  * Algorithm:
- *   1. If the active filter is not passthrough, build and apply it.
- *   2. Magnitude per bin = |re| + |im|  (avoids expensive sqrt).
- *   3. Group PERIOD/2 bins into N_BARS averages (base = 4).
- *   4. Dynamically normalise the bar heights to [0, DISPLAY_HEIGHT].
+ *   1. Magnitude per bin = |re| + |im|  (avoids expensive sqrt).
+ *   2. Group PERIOD/2 bins into N_BARS averages (base = 4).
+ *   3. Dynamically normalise the bar heights to [0, DISPLAY_HEIGHT].
+ *
+ * NOTE: applyFilter() must be called before this function if a non-trivial
+ *       filter is active.
  * ---------------------------------------------------------------------------
  */
 void dsp_computeMagnitudeBars(uint8_t bars[N_BARS]) {
-    if (SYSTEM.filter != passthrough) {
-        buildFilter();
-        applyFilter();
-    }
-
     int const nBins = PERIOD / 2;    /* bins 0..511 are unique */
     int const base = nBins / N_BARS; /* 512 / 128 = 4 */
 

@@ -9,7 +9,7 @@
 
 System_T SYSTEM;
 
-static SystemMode_T MODES[_modeCount];
+static SystemMode_T MODES[MODE_COUNT];
 
 void system_init(Mode const mode) {
     // Register all mode hooks

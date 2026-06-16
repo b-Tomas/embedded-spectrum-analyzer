@@ -10,7 +10,7 @@ typedef enum {
     realTimeMode,
     noiseSamplingMode,
     equalizerMode,
-    _modeCount,
+    MODE_COUNT,
 } Mode;
 
 /**

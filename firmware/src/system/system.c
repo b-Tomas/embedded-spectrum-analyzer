@@ -49,7 +49,6 @@ void system_handleKey(char const c) {
     if (c == 'A' || c == 'B' || c == 'C') {
         MODES[SYSTEM.mode].deInit();
         system_setMode(c == 'A' ? realTimeMode : c == 'B' ? noiseSamplingMode : equalizerMode);
-        SYSTEM.flag_ModeConfigured = RESET;
     } else {
         MODES[SYSTEM.mode].handleKey(c);
     }

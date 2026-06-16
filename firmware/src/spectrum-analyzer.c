@@ -27,19 +27,9 @@ int main(void) {
         char c;
         while (kbd_pop(&c)) {
             printf("pressed key %c\n", c);
-            if (system_handleModeSwitch(c)) {
-                // Mode was changed
-            } else {
-                // The current mode consumes the key
-                MODES[SYSTEM.mode].handleKey(c);
-            }
+            system_handleKey(c);
         }
-
-        if (!SYSTEM.flag_ModeConfigured) {
-            MODES[SYSTEM.mode].init();
-            SYSTEM.flag_ModeConfigured = SET;
-        }
-        MODES[SYSTEM.mode].tick();
+        system_tick();
     }
 }
 

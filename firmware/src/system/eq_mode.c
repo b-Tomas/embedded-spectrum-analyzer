@@ -65,7 +65,7 @@ static void handleKey(char const key) {
         break;
     case '6':
         // Select the band to the right
-        curr_band = MIN(curr_band + 1, EQ_BANDS_N);
+        curr_band = MIN(curr_band + 1, EQ_BANDS_N - 1);
         selectedBandBlinkCounter = 0;
         selectedBandBlink = false;
         break;

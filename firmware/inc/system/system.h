@@ -23,9 +23,6 @@ typedef struct {
     void (*handleKey)(char c); /**< Process a key in the context of the mode **/
 } SystemMode_T;
 
-/**< Registered hooks **/
-extern SystemMode_T MODES[_modeCount];
-
 /**
  * @brief for each mode to register its implementation
  */
@@ -36,7 +33,7 @@ void eqMode_registerHooks(void);
 
 /**
  * @brief The orchestrator struct.
- * @details Contains de state variabes.
+ * @details Contains de state variables.
  * @note flag_ModeExecuted is used in the sate machine.
  */
 typedef struct {
@@ -64,8 +61,14 @@ void system_init(Mode mode);
 void system_setMode(Mode mode);
 
 /**
- * @brief if c is meant to switch modes, modes are switched and returns true
- * @param c an input key
- * @return whether modes were switched
+ * @brief executes the current mode
  */
-bool system_handleModeSwitch(char c);
+void system_tick(void);
+
+/**
+ * @brief consumes a keypress
+ * @details if the key is a mode change, handles the mode changes. Otherwise, it passes the key to
+ * the current mode to be consumed.
+ * @param c
+ */
+void system_handleKey(char c);

@@ -9,7 +9,7 @@
 
 System_T SYSTEM;
 
-SystemMode_T MODES[_modeCount];
+static SystemMode_T MODES[_modeCount];
 
 void system_init(Mode const mode) {
     // Register all mode hooks
@@ -37,12 +37,20 @@ void system_registerMode(Mode const mode, SystemMode_T const* hooks) {
     MODES[mode] = *hooks;
 }
 
-bool system_handleModeSwitch(char const c) {
+void system_tick(void) {
+    if (!SYSTEM.flag_ModeConfigured) {
+        MODES[SYSTEM.mode].init();
+        SYSTEM.flag_ModeConfigured = SET;
+    }
+    MODES[SYSTEM.mode].tick();
+}
+
+void system_handleKey(char const c) {
     if (c == 'A' || c == 'B' || c == 'C') {
         MODES[SYSTEM.mode].deInit();
         system_setMode(c == 'A' ? realTimeMode : c == 'B' ? noiseSamplingMode : equalizerMode);
         SYSTEM.flag_ModeConfigured = RESET;
-        return true;
+    } else {
+        MODES[SYSTEM.mode].handleKey(c);
     }
-    return false;
 }

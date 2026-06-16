@@ -36,3 +36,13 @@ void system_setMode(Mode const mode) {
 void system_registerMode(Mode const mode, SystemMode_T const* hooks) {
     MODES[mode] = *hooks;
 }
+
+bool system_handleModeSwitch(char const c) {
+    if (c == 'A' || c == 'B' || c == 'C') {
+        MODES[SYSTEM.mode].deInit();
+        system_setMode(c == 'A' ? realTimeMode : c == 'B' ? noiseSamplingMode : equalizerMode);
+        SYSTEM.flag_ModeConfigured = RESET;
+        return true;
+    }
+    return false;
+}

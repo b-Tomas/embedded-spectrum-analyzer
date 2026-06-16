@@ -27,13 +27,8 @@ int main(void) {
         char c;
         while (kbd_pop(&c)) {
             printf("pressed key %c\n", c);
-            if (c == 'A' || c == 'B' || c == 'C') {
-                // Change mode if applicable
-                MODES[SYSTEM.mode].deInit();
-                system_setMode(c == 'A'   ? realTimeMode
-                               : c == 'B' ? noiseSamplingMode
-                                          : equalizerMode);
-                SYSTEM.flag_ModeConfigured = RESET;
+            if (system_handleModeSwitch(c)) {
+                // Mode was changed
             } else {
                 // The current mode consumes the key
                 MODES[SYSTEM.mode].handleKey(c);

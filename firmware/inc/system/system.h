@@ -62,3 +62,10 @@ void system_init(Mode mode);
  * @param mode the new mode.
  */
 void system_setMode(Mode mode);
+
+/**
+ * @brief if c is meant to switch modes, modes are switched and returns true
+ * @param c an input key
+ * @return whether modes were switched
+ */
+bool system_handleModeSwitch(char c);

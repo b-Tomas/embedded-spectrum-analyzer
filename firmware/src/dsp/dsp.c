@@ -192,7 +192,6 @@ void buildFilter(uint16_t start_bin, uint16_t end_bin, int16_t magnitude) {
     for (uint16_t i = start_bin; i <= end_bin; i++) {
         FILTER_H[i] = magnitude;
     }
-    printf("FILTER_H built\n");
 }
 
 /* ---------------------------------------------------------------------------
@@ -209,7 +208,6 @@ void applyFilter(void) {
         DSP_FFT_RESULT_RE[i] = mul_q15(DSP_FFT_RESULT_RE[i], FILTER_H[i]);
         DSP_FFT_RESULT_IM[i] = mul_q15(DSP_FFT_RESULT_IM[i], FILTER_H[i]);
     }
-    printf("Filter applied");
 }
 
 /* ---------------------------------------------------------------------------

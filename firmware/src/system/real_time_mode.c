@@ -5,6 +5,7 @@
 #include "system/eq_mode.h"
 #include "system/system.h"
 
+#include <cstdio>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -38,6 +39,14 @@ static const uint16_t EQ_BAND_BINS[EQ_BANDS_N][2] = {
 
 static void init(void) {
     init_bars();
+    /** rebuild the filter if it was not in passthrough (only on change mode)*/
+    if (SYSTEM.filter == customEqualized) {
+        dsp_setFilter(passthrough);
+        system_handleKey('1');
+    } else if (SYSTEM.filter == noiseSuppression) {
+        dsp_setFilter(passthrough);
+        system_handleKey('2');
+    }
 }
 
 static void deInit() {
@@ -81,7 +90,13 @@ static void tick(void) {
 static void handleKey(char c) {
     switch (c) {
     case '1': {
-        printf("Changed to custom filter \n");
+        if (SYSTEM.filter == customEqualized) {
+            printf("Already in EQ filter \n");
+            return;
+        }
+        dsp_setFilter(customEqualized);
+
+        printf("Changed to EQ filter \n");
         /* Build one band at a time, mapping eq_bands[i] (0-255) to Q15. */
         for (int i = 0; i < EQ_BANDS_N; i++) {
             int16_t mag = (int16_t)(((int32_t)eq_bands[i] * Q15_ONE) / 255);
@@ -95,12 +110,27 @@ static void handleKey(char c) {
         break;
     }
     case '2':
+
+        if (SYSTEM.filter == noiseSuppression) {
+            printf("Already in noise suppression filter");
+            return;
+        }
+        dsp_setFilter(noiseSuppression);
+
         printf("Changed to nosie suppression filter \n");
         /* TODO: Build FILTER_H using the noise suppression mode utils */
         break;
     case '3':
+
+        if (SYSTEM.filter == passthrough) {
+            printf("Already in passtrough");
+            return;
+        }
+        dsp_setFilter(passthrough);
+
         printf("Changed to passthrough filter \n");
         buildFilter(0, PERIOD - 1, Q15_ONE);
+        printf("Build of the FILTER_H passthrough filter is complete \n");
         break;
     default:
         printf("system_processKeyRealTimeModekey: Tecla=%c no hace nada bro\n");

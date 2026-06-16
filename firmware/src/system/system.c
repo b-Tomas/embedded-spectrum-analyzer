@@ -39,10 +39,6 @@ void system_ConfigureSetting_NoiseSamplingMode(void) {
     /* TODO: ADC / GPDMA / display reconfiguration. */
 }
 
-void system_ConfigureSetting_EqualizerMode(void) {
-    /* TODO: keyboard, ADC, GPDMA, display reconfiguration. */
-}
-
 /* ---------------------------------------------------------------------------
  * Real-time mode execution
  *
@@ -75,10 +71,6 @@ void system_tickRealTimeMode(void) {
 
 void system_tickNoiseSamplingMode(void) {
     /** TODO: Noise-sampling mode implementation. */
-}
-
-void system_tickEqualizerMode(void) {
-    /** TODO: Equaliser mode implementation. */
 }
 
 void system_setMode(Mode mode) {

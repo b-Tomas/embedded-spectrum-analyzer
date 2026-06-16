@@ -1,5 +1,6 @@
 #include "system/eq_mode.h"
 
+#include "display/display.h"
 #include "display/gfx.h"
 #include "lpc_types.h"
 #include "system/system.h"
@@ -20,18 +21,24 @@ static uint8_t tmp_eq_bands[sizeof(eq_bands)];
 
 /**< Indicates whether the base of the selected band is on or off for a blinking effect **/
 static bool selectedBandBlink = false;
+/**< Blink at around 1hz (two toggles per second) **/
 #define EQ_BANDS_BLINK_TICKS 15
 static uint8_t selectedBandBlinkCounter = 0;
 
-void system_ConfigureSetting_EqualizerMode(void) {
+static void init(void) {
     curr_band = 0;
     memcpy(tmp_eq_bands, eq_bands, sizeof(eq_bands));
+    display_clearCanvas();
+    display_displayCanvas();
 }
 
-void system_tickEqualizerMode(void) {
-    if (flag_readyToDisplay) {
-        flag_readyToDisplay = RESET;
+static void deInit() {
+    // No-op
+}
 
+static void tick() {
+    if (SYSTEM.flag_readyToDisplay) {
+        SYSTEM.flag_readyToDisplay = RESET;
         selectedBandBlinkCounter = (selectedBandBlinkCounter + 1) % EQ_BANDS_BLINK_TICKS;
         if (selectedBandBlinkCounter == 0) {
             selectedBandBlink = !selectedBandBlink;
@@ -40,7 +47,7 @@ void system_tickEqualizerMode(void) {
     }
 }
 
-void system_processKeyEqualizerMode(char const key) {
+static void handleKey(char const key) {
     switch (key) {
     case '2':
         // Increase the value of the current band
@@ -73,4 +80,10 @@ void system_processKeyEqualizerMode(char const key) {
     default:
         printf("system_processKeyEqualizerMode: key=%c unrecognized\n", key);
     }
+}
+
+static SystemMode_T eqModeCfg = {init, deInit, tick, handleKey};
+
+void eqMode_registerHooks() {
+    system_registerModeHooks(equalizerMode, &eqModeCfg);
 }

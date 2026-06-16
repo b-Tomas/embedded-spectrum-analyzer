@@ -47,6 +47,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/inc/display&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/inc/fft&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/inc/system&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/inc/gpdma&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../lib/CMSISv2p00_LPC17xx/CMSISv2p00_LPC17xx/Drivers/inc&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../lib/CMSISv2p00_LPC17xx/CMSISv2p00_LPC17xx/inc&quot;"/>
 								</option>

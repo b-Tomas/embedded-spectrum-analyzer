@@ -1,78 +1,55 @@
 #include "system/system.h"
 
-#include "LPC17xx.h"
 #include "adc/adc.h"
 #include "display/display.h"
-#include "display/gfx.h"
-#include "dsp/dsp.h"
 #include "gpdma/gpdma.h"
 #include "input/keyboard.h"
-#include "lpc17xx_adc.h"
 #include "lpc17xx_dac.h"
-#include "lpc17xx_gpdma.h"
-#include "lpc17xx_timer.h"
 #include "lpc_types.h"
 
-#include <stddef.h>
-#include <stdint.h>
+System_T SYSTEM;
 
-/** @brief Global orchestrator instance. */
-System SYSTEM;
+static SystemMode_T MODES[MODE_COUNT];
 
-FlagStatus flag_readyToDisplay = RESET;
-
-void system_Init(Mode const mode) {
-    system_setMode(mode);
+void system_init(Mode const mode) {
+    // Register all mode hooks
+    realTimeMode_registerHooks();
+    noiseSamplingMode_registerHooks();
+    eqMode_registerHooks();
+    // Initialize each subsystem
+    // some may start async processes that produce interrupt. The ordering is important to prevent
+    // deadlocks
     display_init();
     adc_init();
     gpdma_init();
     DAC_Init();
     kbd_init();
-}
-
-void system_ConfigureSetting_RealTimeMode(void) {
-    init_bars();
-}
-
-void system_ConfigureSetting_NoiseSamplingMode(void) {
-    /* TODO: ADC / GPDMA / display reconfiguration. */
-}
-
-/* ---------------------------------------------------------------------------
- * Real-time mode execution
- *
- * Called repeatedly from the main-loop state machine.  When the GPDMA
- * completes a PERIOD-sized ADC transfer it sets flag_bufferReadyforFFT;
- * this function consumes it:
- *
- *   1. dsp_FFT()  – transforms the time-domain samples into the frequency
- *                   domain (complex spectrum in DSP_FFT_RESULT_RE/IM).
- *   2. If the display timer has fired (flag_readyToDisplay), produce a
- *      set of bar heights via dsp_computeMagnitudeBars() and update the
- *      OLED with update_bars().
- * ---------------------------------------------------------------------------
- */
-void system_tickRealTimeMode(void) {
-    if (!flag_bufferReadyforFFT)
-        return;
-    flag_bufferReadyforFFT = RESET;
-
-    dsp_FFT();
-
-    if (flag_readyToDisplay) {
-        flag_readyToDisplay = RESET;
-
-        uint8_t bars[N_BARS];
-        dsp_computeMagnitudeBars(bars);
-        update_bars(bars);
-    }
-}
-
-void system_tickNoiseSamplingMode(void) {
-    /** TODO: Noise-sampling mode implementation. */
+    // Initialize the given mode
+    system_setMode(mode);
 }
 
 void system_setMode(Mode const mode) {
     SYSTEM.mode = mode;
     SYSTEM.flag_ModeConfigured = RESET;
+}
+
+void system_registerMode(Mode const mode, SystemMode_T const* hooks) {
+    MODES[mode] = *hooks;
+}
+
+void system_tick(void) {
+    if (!SYSTEM.flag_ModeConfigured) {
+        MODES[SYSTEM.mode].init();
+        SYSTEM.flag_ModeConfigured = SET;
+    }
+    MODES[SYSTEM.mode].tick();
+}
+
+void system_handleKey(char const c) {
+    if (c == 'A' || c == 'B' || c == 'C') {
+        MODES[SYSTEM.mode].deInit();
+        system_setMode(c == 'A' ? realTimeMode : c == 'B' ? noiseSamplingMode : equalizerMode);
+    } else {
+        MODES[SYSTEM.mode].handleKey(c);
+    }
 }

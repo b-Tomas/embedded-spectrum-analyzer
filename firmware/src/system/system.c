@@ -21,10 +21,9 @@ System SYSTEM;
 
 FlagStatus flag_readyToDisplay = RESET;
 
-void system_Init(Mode mode) {
+void system_Init(Mode const mode) {
     system_setMode(mode);
     display_init();
-    init_bars();
     adc_init();
     gpdma_init();
     DAC_Init();
@@ -32,7 +31,7 @@ void system_Init(Mode mode) {
 }
 
 void system_ConfigureSetting_RealTimeMode(void) {
-    /** TODO: Display behaviour */
+    init_bars();
 }
 
 void system_ConfigureSetting_NoiseSamplingMode(void) {
@@ -73,7 +72,7 @@ void system_tickNoiseSamplingMode(void) {
     /** TODO: Noise-sampling mode implementation. */
 }
 
-void system_setMode(Mode mode) {
+void system_setMode(Mode const mode) {
     SYSTEM.mode = mode;
     SYSTEM.flag_ModeConfigured = RESET;
 }

@@ -180,27 +180,13 @@ void dsp_IFFT(void) {
 /* ---------------------------------------------------------------------------
  * buildFilter
  *
- * Inspects SYSTEM.filter and fills FILTER_H accordingly.
- *
- * Currently only passthrough is implemented:
- *   - All bins are set to Q15_ONE so that applyFilter becomes a no-op.
- *
- * noiseSuppression and customEqualized are reserved.
+ * Sets FILTER_H[i] = magnitude for i in [start_bin, end_bin] (inclusive).
+ * Bins outside the range are left unchanged.
  * ---------------------------------------------------------------------------
  */
-void buildFilter(void) {
-    switch (SYSTEM.filter) {
-    case passthrough:
-        for (int i = 0; i < PERIOD; i++) {
-            FILTER_H[i] = Q15_ONE;
-        }
-        break;
-
-    case noiseSuppression:
-        break;
-    case customEqualized:
-        /** TODO: implement filter configuration for these modes. */
-        break;
+void buildFilter(uint16_t start_bin, uint16_t end_bin, int16_t magnitude) {
+    for (uint16_t i = start_bin; i <= end_bin; i++) {
+        FILTER_H[i] = magnitude;
     }
 }
 
@@ -232,18 +218,15 @@ void applyFilter(void) {
  *       If these constants change, the averaging logic must be revisited.
  *
  * Algorithm:
- *   1. If the active filter is not passthrough, build and apply it.
- *   2. Magnitude per bin = |re| + |im|  (avoids expensive sqrt).
- *   3. Group PERIOD/2 bins into N_BARS averages (base = 4).
- *   4. Dynamically normalise the bar heights to [0, DISPLAY_HEIGHT].
+ *   1. Magnitude per bin = |re| + |im|  (avoids expensive sqrt).
+ *   2. Group PERIOD/2 bins into N_BARS averages (base = 4).
+ *   3. Dynamically normalise the bar heights to [0, DISPLAY_HEIGHT].
+ *
+ * NOTE: applyFilter() must be called before this function if a non-trivial
+ *       filter is active.
  * ---------------------------------------------------------------------------
  */
 void dsp_computeMagnitudeBars(uint8_t bars[N_BARS]) {
-    if (SYSTEM.filter != passthrough) {
-        buildFilter();
-        applyFilter();
-    }
-
     int const nBins = PERIOD / 2;    /* bins 0..511 are unique */
     int const base = nBins / N_BARS; /* 512 / 128 = 4 */
 

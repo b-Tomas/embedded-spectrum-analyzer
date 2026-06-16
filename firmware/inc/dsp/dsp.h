@@ -58,13 +58,18 @@ void dsp_FFT(void);
 void dsp_IFFT(void);
 
 /**
- * @brief Build a frequency-domain filter in FILTER_H based on SYSTEM.filter.
+ * @brief Build a square filter in FILTER_H.
  *
- * - passthrough:     fill FILTER_H with Q15_ONE (no attenuation).
- * - noiseSuppression: reserved.
- * - customEqualized:  reserved.
+ * Sets FILTER_H[i] = magnitude for i in [start_bin, end_bin] (inclusive).
+ * Bins outside the range are NOT modified — the caller is responsible for
+ * zeroing FILTER_H beforehand when constructing a multi-band filter.
+ *
+ * @param start_bin  First bin to set (0-based).
+ * @param end_bin    Last bin to set (inclusive, must be < PERIOD).
+ * @param magnitude  Q15 coefficient for the passband (Q15_ONE = passthrough,
+ *                   0 = fully blocked).
  */
-void buildFilter(void);
+void buildFilter(uint16_t start_bin, uint16_t end_bin, int16_t magnitude);
 
 /**
  * @brief Multiply the complex spectrum by FILTER_H, in-place.
@@ -82,10 +87,9 @@ void applyFilter(void);
  *       If these constants change, the averaging logic must be revisited.
  *
  * Steps:
- *   1. If SYSTEM.filter != passthrough, call buildFilter() + applyFilter().
- *   2. Compute per-bin magnitude as abs(re) + abs(im) for bins 0..PERIOD/2-1.
- *   3. Average groups of (PERIOD/2 / N_BARS) bins into N_BARS bars.
- *   4. Dynamically normalise to [0, DISPLAY_HEIGHT].
+ *   1. Compute per-bin magnitude as abs(re) + abs(im) for bins 0..PERIOD/2-1.
+ *   2. Average groups of (PERIOD/2 / N_BARS) bins into N_BARS bars.
+ *   3. Dynamically normalise to [0, DISPLAY_HEIGHT].
  *
  * @param bars  Output array of length N_BARS, filled with display heights.
  */

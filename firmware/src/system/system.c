@@ -26,6 +26,11 @@ void system_init(Mode const mode) {
     kbd_init();
     // Initialize the given mode
     system_setMode(mode);
+
+    // Reset the frequency-domain filter to passthrough
+    for (int i = 0; i < PERIOD; i++) {
+        FILTER_H[i] = Q15_ONE;
+    }
 }
 
 void system_setMode(Mode const mode) {

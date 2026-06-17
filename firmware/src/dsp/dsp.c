@@ -297,8 +297,17 @@ void applyFilter(void) {
  *       filter is active.
  * ---------------------------------------------------------------------------
  */
-#define BAR_LOG2_FLOOR    6 /* magnitudes <= 2^6 (=64) render as an empty bar */
-#define BAR_PX_PER_OCTAVE 5 /* display pixels per doubling of magnitude        */
+/*
+ * BAR_LOG2_FLOOR is the zero-point of the dB scale: bar averages with a
+ * magnitude <= 2^BAR_LOG2_FLOOR render as an empty bar.  It must sit just
+ * above the FFT noise/leakage floor (dominated by the DC bin and Q15
+ * round-off), otherwise the log compression draws that noise as a tall
+ * baseline.  Measured floor with a grounded input is ~2^12, so 12 keeps the
+ * baseline empty while real signal still rises above it.  Each +1 lowers
+ * every bar by BAR_PX_PER_OCTAVE pixels; nudge to taste.
+ */
+#define BAR_LOG2_FLOOR    12 /* empty-bar threshold = 2^12 (≈ noise floor)     */
+#define BAR_PX_PER_OCTAVE 5  /* display pixels per doubling of magnitude        */
 
 void dsp_computeMagnitudeBars(uint8_t bars[N_BARS]) {
     int const nBins = PERIOD / 2;    /* bins 0..511 are unique */

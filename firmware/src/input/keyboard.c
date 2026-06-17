@@ -21,10 +21,12 @@ static char const kbd_symbolLut[16] = {'*', '0', '#', 'D', '7', '8', '9', 'C',
                                        '4', '5', '6', 'B', '1', '2', '3', 'A'};
 
 void kbd_init() {
-    // Configure and enable interruputs for the DA (data available) line of the keyboard decoder
+    // Configure and enable interruputs for the DA (data available) line of the keyboard decoder.
+    // EINT1 (P2.11) is used instead of EINT0: P2.10 is the boot ROM ISP-entry pin, and the DA line
+    // idles low, which would trap the chip in the serial bootloader on every power-on reset.
     EXTI_Init();
-    EXTI_PinConfig(EXTI_EINT0, EXTI_PULLDOWN);
-    EXTI_ConfigEnable(&(EXTI_CFG_T){EXTI_EINT0, EXTI_EDGE_SENSITIVE, EXTI_RISING_EDGE});
+    EXTI_PinConfig(EXTI_EINT1, EXTI_PULLDOWN);
+    EXTI_ConfigEnable(&(EXTI_CFG_T){EXTI_EINT1, EXTI_EDGE_SENSITIVE, EXTI_RISING_EDGE});
     // Configure GPIO input for the 4 data lines
     // Use the lower 4 bits of port 2
     GPIO_SetDir(PORT_2, 0x0F, GPIO_INPUT);

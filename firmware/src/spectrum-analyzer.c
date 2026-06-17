@@ -22,7 +22,9 @@ int main(void) {
     system_init(realTimeMode);
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {
-        __WFI();
+        // Wait for interrupts to wake up
+        // This causes issues on the release build, not sure why, so we leave it commented out
+        // __WFI();
         // Process keyboard input if any
         char c;
         while (kbd_pop(&c)) {
@@ -33,9 +35,9 @@ int main(void) {
     }
 }
 
-void EINT0_IRQHandler() {
+void EINT1_IRQHandler() {
     kbd_irq_handler();
-    EXTI_ClearFlag(EXTI_EINT0);
+    EXTI_ClearFlag(EXTI_EINT1);
 }
 
 void I2C0_IRQHandler() {

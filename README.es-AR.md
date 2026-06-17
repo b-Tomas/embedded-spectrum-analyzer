@@ -128,25 +128,25 @@ sequenceDiagram
     participant DMA as ADC + GPDMA (CH7)
     participant ISRD as ISR DMA
     participant ISRT as ISR Timer1
-    participant Loop as Bucle principal
+    participant Main as Bucle principal
     participant DSP as DSP
     participant Out as DAC / OLED
 
-    Note over DMA: Llena una mitad del doble buffer<br/>(ping-pong autónomo)
+    Note over DMA: Llena una mitad del doble buffer (ping-pong autónomo)
     DMA->>ISRD: Terminal count (DMA_IRQ)
     ISRD->>ISRD: Alterna flag_halfReady
-    ISRD-->>Loop: flag_bufferReadyforFFT = SET
+    ISRD-->>Main: flag_bufferReadyforFFT = SET
     Note over DMA: Sigue llenando la otra mitad en paralelo
 
-    ISRT-->>Loop: flag_readyToDisplay = SET (menor frecuencia)
+    ISRT-->>Main: flag_readyToDisplay = SET (menor frecuencia)
 
-    Loop->>Loop: Despierta de __WFI, ve flag_bufferReadyforFFT
-    Loop->>DSP: dsp_FFT + applyFilter
+    Main->>Main: Despierta de __WFI, ve flag_bufferReadyforFFT
+    Main->>DSP: dsp_FFT + applyFilter
     alt flag_readyToDisplay activo
-        DSP->>Out: dsp_computeMagnitudeBars → OLED (I2C)
+        DSP->>Out: dsp_computeMagnitudeBars y OLED (I2C)
     end
-    Loop->>DSP: dsp_IFFT
-    DSP->>Out: Buffer de salida → DAC (GPDMA canal 2)
+    Main->>DSP: dsp_IFFT
+    DSP->>Out: Buffer de salida al DAC (GPDMA canal 2)
 ```
 ### Mapeo de frecuencias del display
 

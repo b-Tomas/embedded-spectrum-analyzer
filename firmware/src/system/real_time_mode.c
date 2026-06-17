@@ -1,3 +1,4 @@
+#include "debug.h"
 #include "display/gfx.h"
 #include "dsp/dsp.h"
 #include "gpdma/gpdma.h"
@@ -73,7 +74,7 @@ static void handleKey(char c) {
         break;
 
     default:
-        printf("system_processKeyRealTimeModekey: Tecla=%c no hace nada bro\n");
+        DBG_PRINTF("system_processKeyRealTimeModekey: Tecla=%c no hace nada bro\n");
         break;
     }
 }

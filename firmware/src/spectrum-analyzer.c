@@ -1,4 +1,5 @@
 #include "LPC17xx.h"
+#include "debug.h"
 #include "display/i2c_bus.h"
 #include "gpdma/gpdma.h"
 #include "input/keyboard.h"
@@ -8,7 +9,6 @@
 #include "system/system.h"
 
 #include <stdbool.h>
-#include <stdio.h>
 
 // Uncomment the line below to run all integration tests
 // TODO(b-Tomas): find a cleaner way to run tests
@@ -26,7 +26,7 @@ int main(void) {
         // Process keyboard input if any
         char c;
         while (kbd_pop(&c)) {
-            printf("pressed key %c\n", c);
+            DBG_PRINTF("pressed key %c\n", c);
             system_handleKey(c);
         }
         system_tick();

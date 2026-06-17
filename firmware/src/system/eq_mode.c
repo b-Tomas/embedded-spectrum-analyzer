@@ -1,12 +1,12 @@
 #include "system/eq_mode.h"
 
+#include "debug.h"
 #include "display/display.h"
 #include "display/gfx.h"
 #include "lpc_types.h"
 #include "system/system.h"
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 
 #define EQ_INC_DEC 16 /**< How much to increment or decrement each bar **/
@@ -71,14 +71,14 @@ static void handleKey(char const key) {
         break;
     case '#':
         memcpy(eq_bands, tmp_eq_bands, sizeof(eq_bands));
-        printf("system_processKeyEqualizerMode: saved EQ ");
+        DBG_PRINTF("system_processKeyEqualizerMode: saved EQ ");
         for (int i = 0; i < sizeof(eq_bands); i++) {
-            printf("%d ", eq_bands[i]);
+            DBG_PRINTF("%d ", eq_bands[i]);
         }
-        printf("\n");
+        DBG_PRINTF("\n");
         break;
     default:
-        printf("system_processKeyEqualizerMode: key=%c unrecognized\n", key);
+        DBG_PRINTF("system_processKeyEqualizerMode: key=%c unrecognized\n", key);
     }
 }
 

@@ -2,12 +2,11 @@
 
 #include "LPC17xx.h"
 #include "adc/adc.h"
+#include "debug.h"
 #include "gpdma/gpdma.h"
 #include "lpc17xx_adc.h"
 #include "lpc17xx_gpdma.h"
 #include "test/it.h"
-
-#include <stdio.h>
 
 #define GPDMA_TIMEOUT 5000000
 
@@ -51,29 +50,29 @@ static void it_gpdma_p2m_config(void) {
 
     /* ── DMAC controller enabled ─────────────────────────────────────── */
     if (!(LPC_GPDMA->DMACConfig & GPDMA_DMACConfig_E)) {
-        printf("  FAIL: DMAC not enabled\n");
+        DBG_PRINTF("  FAIL: DMAC not enabled\n");
         pass = 0;
     }
 
     /* ── Source address === ADC ADGDR (per GPDMA_LUTPerAddr[GPDMA_ADC]) ── */
     uint32_t expected_src = (uint32_t)(uintptr_t)&LPC_ADC->ADGDR;
     if (ch7->DMACCSrcAddr != expected_src) {
-        printf("  FAIL: src addr 0x%08lX, expected 0x%08lX\n", (unsigned long)ch7->DMACCSrcAddr,
-               (unsigned long)expected_src);
+        DBG_PRINTF("  FAIL: src addr 0x%08lX, expected 0x%08lX\n", (unsigned long)ch7->DMACCSrcAddr,
+                   (unsigned long)expected_src);
         pass = 0;
     }
 
     /* ── Destination address === start of FFT buffer ─────────────────── */
     uint32_t expected_dst = (uint32_t)(uintptr_t)&FFT_SOURCE_BUFFER_TIME[0];
     if (ch7->DMACCDestAddr != expected_dst) {
-        printf("  FAIL: dst addr 0x%08lX, expected 0x%08lX\n", (unsigned long)ch7->DMACCDestAddr,
-               (unsigned long)expected_dst);
+        DBG_PRINTF("  FAIL: dst addr 0x%08lX, expected 0x%08lX\n",
+                   (unsigned long)ch7->DMACCDestAddr, (unsigned long)expected_dst);
         pass = 0;
     }
 
     /* ── LLI is set (address of adc_secondHalf_LLI) ─────────────────── */
     if (ch7->DMACCLLI == 0) {
-        printf("  FAIL: DMACCLLI is NULL\n");
+        DBG_PRINTF("  FAIL: DMACCLLI is NULL\n");
         pass = 0;
     }
 
@@ -81,22 +80,23 @@ static void it_gpdma_p2m_config(void) {
     reg = ch7->DMACCControl;
 
     if ((reg & 0xFFF) != PERIOD) {
-        printf("  FAIL: transfer size %lu, expected %d\n", (unsigned long)(reg & 0xFFF), PERIOD);
+        DBG_PRINTF("  FAIL: transfer size %lu, expected %d\n", (unsigned long)(reg & 0xFFF),
+                   PERIOD);
         pass = 0;
     }
 
     if (!(reg & GPDMA_DMACCxControl_I)) {
-        printf("  FAIL: TC interrupt not enabled in control\n");
+        DBG_PRINTF("  FAIL: TC interrupt not enabled in control\n");
         pass = 0;
     }
 
     if (!(reg & GPDMA_DMACCxControl_DI)) {
-        printf("  FAIL: destination increment not set\n");
+        DBG_PRINTF("  FAIL: destination increment not set\n");
         pass = 0;
     }
 
     if (reg & GPDMA_DMACCxControl_SI) {
-        printf("  FAIL: source increment must be disabled\n");
+        DBG_PRINTF("  FAIL: source increment must be disabled\n");
         pass = 0;
     }
 
@@ -104,28 +104,29 @@ static void it_gpdma_p2m_config(void) {
     reg = ch7->DMACCConfig;
 
     if (!(reg & GPDMA_DMACCxConfig_ITC)) {
-        printf("  FAIL: ITC not set in config\n");
+        DBG_PRINTF("  FAIL: ITC not set in config\n");
         pass = 0;
     }
 
     if (((reg >> 11) & 0x7) != GPDMA_P2M) {
-        printf("  FAIL: transfer type not P2M (got %lu)\n", (unsigned long)((reg >> 11) & 0x7));
+        DBG_PRINTF("  FAIL: transfer type not P2M (got %lu)\n", (unsigned long)((reg >> 11) & 0x7));
         pass = 0;
     }
 
     if (((reg >> 1) & 0x1F) != GPDMA_ADC) {
-        printf("  FAIL: source connection not ADC (got %lu)\n", (unsigned long)((reg >> 1) & 0x1F));
+        DBG_PRINTF("  FAIL: source connection not ADC (got %lu)\n",
+                   (unsigned long)((reg >> 1) & 0x1F));
         pass = 0;
     }
 
     if (!(reg & GPDMA_DMACCxConfig_E)) {
-        printf("  FAIL: CH7 not started (E bit)\n");
+        DBG_PRINTF("  FAIL: CH7 not started (E bit)\n");
         pass = 0;
     }
 
     /* ── Result ─────────────────────────────────────────────────────── */
     if (pass) {
-        printf("  PASS\n");
+        DBG_PRINTF("  PASS\n");
     }
 
     GPDMA_ChannelStop(GPDMA_CH_7);
@@ -159,19 +160,19 @@ static void it_gpdma_p2m_transfer(void) {
     int timed_out = !it_gpdma_wait_transfer();
 
     if (timed_out) {
-        printf("  FAIL: timeout waiting for TC\n");
+        DBG_PRINTF("  FAIL: timeout waiting for TC\n");
         it_gpdma_cleanup();
-        printf("  FAIL\n");
+        DBG_PRINTF("  FAIL\n");
         return;
     }
 
     /* ── Verify ISR flags ───────────────────────────────────────────── */
     if (!flag_bufferReadyforFFT) {
-        printf("  WARN: flag_bufferReadyforFFT was not set (ISR may not have run yet)\n");
+        DBG_PRINTF("  WARN: flag_bufferReadyforFFT was not set (ISR may not have run yet)\n");
     }
 
     if (flag_halfReady != 0) {
-        printf("  WARN: flag_halfReady = %d (expected 0 after first half)\n", flag_halfReady);
+        DBG_PRINTF("  WARN: flag_halfReady = %d (expected 0 after first half)\n", flag_halfReady);
     }
 
     /* ── Inspect buffer ─────────────────────────────────────────────── */
@@ -195,32 +196,33 @@ static void it_gpdma_p2m_transfer(void) {
 
     /* Print a few samples for manual inspection in the debugger. */
     for (int i = 0; i < 6 && i < PERIOD; i++) {
-        printf("  [%d] = 0x%04X (%u)\n", i, FFT_SOURCE_BUFFER_TIME[i], FFT_SOURCE_BUFFER_TIME[i]);
+        DBG_PRINTF("  [%d] = 0x%04X (%u)\n", i, FFT_SOURCE_BUFFER_TIME[i],
+                   FFT_SOURCE_BUFFER_TIME[i]);
     }
-    printf("  ...\n");
-    printf("  [%d] = 0x%04X (%u)\n", PERIOD - 1, FFT_SOURCE_BUFFER_TIME[PERIOD - 1],
-           FFT_SOURCE_BUFFER_TIME[PERIOD - 1]);
+    DBG_PRINTF("  ...\n");
+    DBG_PRINTF("  [%d] = 0x%04X (%u)\n", PERIOD - 1, FFT_SOURCE_BUFFER_TIME[PERIOD - 1],
+               FFT_SOURCE_BUFFER_TIME[PERIOD - 1]);
 
     /* ── Evaluate ───────────────────────────────────────────────────── */
     if (sum == 0) {
-        printf("  FAIL: buffer is all zeros — no DMA transfer occurred\n");
+        DBG_PRINTF("  FAIL: buffer is all zeros — no DMA transfer occurred\n");
         pass = 0;
     }
 
     if (!has_samples) {
-        printf("  FAIL: no ADC result bits set in any sample\n");
+        DBG_PRINTF("  FAIL: no ADC result bits set in any sample\n");
         pass = 0;
     }
 
     if (all_same) {
-        printf("  WARN: every sample is 0x%04lX — DMA may be reading a "
-               "stale ADGDR\n",
-               (unsigned long)first);
+        DBG_PRINTF("  WARN: every sample is 0x%04lX — DMA may be reading a "
+                   "stale ADGDR\n",
+                   (unsigned long)first);
     }
 
     if (pass) {
-        printf("  PASS  (sum = %lu, first sample = %lu)\n", (unsigned long)sum,
-               (unsigned long)(first >> 4));
+        DBG_PRINTF("  PASS  (sum = %lu, first sample = %lu)\n", (unsigned long)sum,
+                   (unsigned long)(first >> 4));
     }
 
     /* ── Cleanup (non-blocking, guaranteed) ─────────────────────────── */

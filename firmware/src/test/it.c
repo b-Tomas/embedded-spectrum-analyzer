@@ -1,12 +1,11 @@
 #include "test/it.h"
 
 #include "LPC17xx.h"
+#include "debug.h"
 #include "test/display/it_SSD1306.h"
 #include "test/display/it_display.h"
 #include "test/display/it_gfx.h"
 #include "test/gpdma/it_gpdma.h"
-
-#include <stdio.h>
 
 void it_delay() {
     for (volatile int i = 0; i < 100000; i++) {
@@ -16,7 +15,8 @@ void it_delay() {
 
 void it_run_cases(const char* group, const it_case_t* cases, uint32_t const n) {
     for (uint32_t i = 0; i < n; i++) {
-        printf("[IT %s %u/%lu] %s\n", group, (uint32_t)(i + 1), (unsigned long)n, cases[i].name);
+        DBG_PRINTF("[IT %s %u/%lu] %s\n", group, (uint32_t)(i + 1), (unsigned long)n,
+                   cases[i].name);
         cases[i].run();
     }
 }
@@ -33,5 +33,5 @@ void it_run_all(void) {
     /* GPDMA / ADC subsystem */
     it_gpdma_run();
 
-    printf("[IT] done\n");
+    DBG_PRINTF("[IT] done\n");
 }

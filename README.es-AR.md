@@ -116,6 +116,38 @@ flowchart TD
 La visualización de la pantalla ocurre a una frecuencia menor que el
 procesamiento de audio, por eso el refresco del OLED es condicional dentro del
 mismo bucle.
+
+El siguiente diagrama de secuencia muestra la naturaleza concurrente y guiada
+por interrupciones del modo: el GPDMA llena el doble buffer de forma autónoma,
+la ISR del DMA y la ISR del Timer1 activan sus respectivos flags, y el bucle
+principal (`main` en `firmware/src/spectrum-analyzer.c`, que despierta con
+`__WFI`) los consume.
+
+```mermaid
+sequenceDiagram
+    participant DMA as ADC + GPDMA (CH7)
+    participant ISRD as ISR DMA
+    participant ISRT as ISR Timer1
+    participant Loop as Bucle principal
+    participant DSP as DSP
+    participant Out as DAC / OLED
+
+    Note over DMA: Llena una mitad del doble buffer<br/>(ping-pong autónomo)
+    DMA->>ISRD: Terminal count (DMA_IRQ)
+    ISRD->>ISRD: Alterna flag_halfReady
+    ISRD-->>Loop: flag_bufferReadyforFFT = SET
+    Note over DMA: Sigue llenando la otra mitad en paralelo
+
+    ISRT-->>Loop: flag_readyToDisplay = SET (menor frecuencia)
+
+    Loop->>Loop: Despierta de __WFI, ve flag_bufferReadyforFFT
+    Loop->>DSP: dsp_FFT + applyFilter
+    alt flag_readyToDisplay activo
+        DSP->>Out: dsp_computeMagnitudeBars → OLED (I2C)
+    end
+    Loop->>DSP: dsp_IFFT
+    DSP->>Out: Buffer de salida → DAC (GPDMA canal 2)
+```
 ### Mapeo de frecuencias del display
 
 La entrada al ADC es una señal **real** (no compleja). La FFT produce un espectro simétrico:

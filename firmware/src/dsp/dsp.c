@@ -85,7 +85,7 @@ void dsp_FFT(void) {
 
     /* Load and centre the time-domain samples. */
     for (int i = 0; i < PERIOD; i++) {
-        DSP_FFT_RESULT_RE[i] = (int32_t)src[i] - ADC_CENTER;
+        DSP_FFT_RESULT_RE[i] = (int32_t)(src[i] >> 4) - ADC_CENTER;
         DSP_FFT_RESULT_IM[i] = 0;
     }
 

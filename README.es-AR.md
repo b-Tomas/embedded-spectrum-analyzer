@@ -26,7 +26,59 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
 >   B: Cambia a Modo 2: Muestreo de ruido.  
 >   C: Cambia entre el Modo 3: Equalizador
 
-<!-- Insertar gráficos -->
+### Máquina de estados de los modos
+
+El cambio de modo es global: las teclas `A`, `B` y `C` desinicializan el modo
+actual e inicializan el seleccionado (ver `system_handleKey` en
+`firmware/src/system/system.c`).
+
+```mermaid
+stateDiagram-v2
+    [*] --> Modo1
+    Modo1: Modo 1 — Análisis en tiempo real
+    Modo2: Modo 2 — Muestreo de ruido
+    Modo3: Modo 3 — Ecualización
+
+    Modo1 --> Modo2: tecla B
+    Modo1 --> Modo3: tecla C
+    Modo2 --> Modo1: tecla A
+    Modo2 --> Modo3: tecla C
+    Modo3 --> Modo1: tecla A
+    Modo3 --> Modo2: tecla B
+
+    Modo1 --> Modo1: teclas 1 / 2 / 3
+    Modo3 --> Modo3: teclas 2 / 4 / 6 / 8 / #
+```
+
+### Arquitectura del sistema
+
+Vista general del flujo de señal a través del hardware y el procesador. La
+señal de audio se captura con un micrófono pasivo, se procesa en el dominio
+de la frecuencia y se reproduce con una bocina pasiva, mientras el espectro se
+visualiza en paralelo en la pantalla OLED.
+
+```mermaid
+flowchart LR
+    Mic["Micrófono pasivo"] --> AmpIn["Amp. operacional<br/>(entrada)"]
+    AmpIn --> ADC["ADC"]
+    ADC -->|GPDMA canal 1| DBuf["Doble buffer<br/>de muestras"]
+
+    subgraph CPU["Procesador (Cortex-M3)"]
+        direction TB
+        FFT["FFT"] --> Filtro["Aplicar filtro<br/>(eq / ruido / paso directo)"]
+        Filtro --> IFFT["FFT inversa"]
+        Filtro --> Barras["Barras de magnitud"]
+    end
+
+    DBuf --> FFT
+    IFFT --> OutBuf["Buffer de salida"]
+    OutBuf -->|GPDMA canal 2| DAC["DAC"]
+    DAC --> AmpOut["Amp. operacional<br/>(salida)"]
+    AmpOut --> Bocina["Bocina pasiva"]
+
+    Barras --> OLED["Pantalla OLED<br/>(I2C)"]
+    Teclado["Teclado matricial"] --> CPU
+```
 
 ## Modo 1: Análisis de Espectro en Tiempo Real
 
@@ -41,6 +93,29 @@ El cambio de modos se realiza mediante un teclado matricial, así como la intera
   - `1`: Aplicar el filtro de ecualización.  
   - `2`: Aplicar filtro de supresión de ruido.  
   - `3`: Aplicar el filtro de paso directo.  
+
+El procesamiento se ejecuta una vez por período de muestras. Cuando el GPDMA
+completa una transferencia del ADC, marca `flag_bufferReadyforFFT` y el bucle
+principal lo consume (ver `tick()` en `firmware/src/system/real_time_mode.c`):
+
+```mermaid
+flowchart TD
+    Start(["GPDMA completa transferencia<br/>del ADC al doble buffer"]) --> Flag{"flag_bufferReadyforFFT<br/>activo?"}
+    Flag -->|No| Start
+    Flag -->|Sí| FFT["dsp_FFT<br/>(dominio del tiempo → frecuencia)"]
+    FFT --> Filtro["applyFilter<br/>(eq / supresión de ruido / paso directo)"]
+    Filtro --> Disp{"Toca refrescar<br/>la pantalla?"}
+    Disp -->|Sí| Bars["dsp_computeMagnitudeBars"]
+    Bars --> OLED["update_bars → OLED (I2C)"]
+    OLED --> IFFT
+    Disp -->|No| IFFT["dsp_IFFT<br/>(frecuencia → tiempo)"]
+    IFFT --> Out["Buffer de salida → DAC<br/>(GPDMA canal 2)"]
+    Out --> Start
+```
+
+La visualización de la pantalla ocurre a una frecuencia menor que el
+procesamiento de audio, por eso el refresco del OLED es condicional dentro del
+mismo bucle.
 ### Mapeo de frecuencias del display
 
 La entrada al ADC es una señal **real** (no compleja). La FFT produce un espectro simétrico:
@@ -79,6 +154,16 @@ La frecuencia central aproximada es `k × 128 + 64` Hz.
 3. El espectro de frecuencias del ruido se almacena como un filtro en la zona de memoria reservada para el filtro de ruido.
 4. El inicio y finalización de la grabación se realiza mediante el teclado.
 
+```mermaid
+flowchart TD
+    Idle(["Modo inactivo"]) -->|tecla inicia grabación| Rec["Grabando"]
+    Rec --> Capt["GPDMA copia muestras del ADC<br/>al doble buffer"]
+    Capt --> FFT["dsp_FFT<br/>(espectro del ruido)"]
+    FFT --> Store["Almacenar espectro como<br/>filtro de ruido en memoria"]
+    Store -->|tecla finaliza grabación| Idle
+    Store -->|continúa grabando| Capt
+```
+
 > [!NOTE]
 >
 > Decidir:
@@ -94,6 +179,21 @@ La frecuencia central aproximada es `k × 128 + 64` Hz.
   - `#`: guardar los cambios como filtro
 
 2. La configuración se guarda en la zona de memoria reservada para el filtro de ecualización.
+
+```mermaid
+flowchart TD
+    Start(["Editor de ecualización<br/>en pantalla OLED"]) --> Sel["Banda activa"]
+    Sel -->|tecla 4| Left["Desplazar banda<br/>a la izquierda"]
+    Sel -->|tecla 6| Right["Desplazar banda<br/>a la derecha"]
+    Sel -->|tecla 2| Up["Incrementar ganancia<br/>de la banda"]
+    Sel -->|tecla 8| Down["Decrementar ganancia<br/>de la banda"]
+    Left --> Sel
+    Right --> Sel
+    Up --> Sel
+    Down --> Sel
+    Sel -->|tecla #| Save["Guardar como filtro de<br/>ecualización en memoria"]
+    Save --> End(["Filtro guardado"])
+```
 
 > [!NOTE]
 >  

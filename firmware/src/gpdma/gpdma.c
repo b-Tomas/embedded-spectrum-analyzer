@@ -29,7 +29,7 @@ volatile uint16_t FFT_SOURCE_BUFFER_TIME[2 * PERIOD];
  * system_executeRealTimeMode().
  * ---------------------------------------------------------------------------
  */
-FlagStatus flag_bufferReadyforFFT = RESET;
+volatile FlagStatus flag_bufferReadyforFFT = RESET;
 
 /* ---------------------------------------------------------------------------
  * GPDMA channel-7 configuration

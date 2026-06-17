@@ -36,10 +36,10 @@ void eqMode_registerHooks(void);
  * @details Contains de state variables.
  */
 typedef struct {
-    Mode mode;                      /**< Current operational mode. */
-    FlagStatus flag_ModeConfigured; /**< Flag to prevent re-configuration */
-    Filter filter;                  /**< Active signal filter. */
-    FlagStatus flag_readyToDisplay; /**< Whether the display refresh timer has fired **/
+    Mode mode;                               /**< Current operational mode. */
+    FlagStatus flag_ModeConfigured;          /**< Flag to prevent re-configuration */
+    Filter filter;                           /**< Active signal filter. */
+    volatile FlagStatus flag_readyToDisplay; /**< Whether the display refresh timer has fired **/
 } System_T;
 
 /**

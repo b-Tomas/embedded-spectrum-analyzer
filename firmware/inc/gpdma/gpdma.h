@@ -17,7 +17,7 @@ extern volatile int flag_halfReady;
 /**
  * @brief Flag that indicates that the FFT input buffer is ready.
  */
-extern FlagStatus flag_bufferReadyforFFT;
+extern volatile FlagStatus flag_bufferReadyforFFT;
 
 /**
  * @brief Memory address for the FFT input buffer (double-buffered).

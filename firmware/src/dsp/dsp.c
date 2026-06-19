@@ -6,6 +6,7 @@
 #include "dsp/fft_tables.h"
 #include "gpdma/gpdma.h"
 #include "system/system.h"
+#include "system/noise_sampling_mode.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -225,6 +226,9 @@ void dsp_buildNoiseSuppressionFilter(void) {
 
     printf("Changed to nosie suppression filter \n");
     /* TODO: Build FILTER_H using the noise suppression mode utils */
+    if(!noiseDone)
+    return;
+    dsp_buildEqualizationFilter();
 }
 
 void dsp_buildPassthroughFilterd(void) {

@@ -49,7 +49,7 @@ GPDMA_LLI_T adc_firstHalf_LLI = {
     .srcAddr = (uint32_t)&LPC_ADC->ADGDR,
     .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME[0],
     .nextLLI = (uint32_t)&adc_secondHalf_LLI,
-    .control = (PERIOD | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
+    .control = (PERIOD | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
 };
 
 /** LLI that writes the second half of the double buffer. */
@@ -57,7 +57,7 @@ GPDMA_LLI_T adc_secondHalf_LLI = {
     .srcAddr = (uint32_t)&LPC_ADC->ADGDR,
     .dstAddr = (uint32_t)&FFT_SOURCE_BUFFER_TIME[PERIOD],
     .nextLLI = (uint32_t)&adc_firstHalf_LLI,
-    .control = (PERIOD | 7 << 12 | 7 << 15 | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
+    .control = (PERIOD | 1 << 18 | 1 << 21 | 1 << 27 | 1 << 31),
 };
 
 /** Source endpoint: ADC (no increment, halfword, burst = 1). */

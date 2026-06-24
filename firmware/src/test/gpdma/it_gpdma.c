@@ -21,8 +21,8 @@ static int it_gpdma_wait_transfer(void) {
 
 static void it_gpdma_adc_init(void) {
     ADC_Init(ADC_RATE);
-    ADC_PinConfig(ADC_CHANNEL_0);
-    ADC_ChannelEnable(ADC_CHANNEL_0);
+    ADC_PinConfig(ADC_CHANNEL_1);
+    ADC_ChannelEnable(ADC_CHANNEL_1);
     ADC_StartCmd(ADC_START_CONTINUOUS);
     ADC_BurstEnable();
     ADC_PowerUp();

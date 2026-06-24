@@ -43,6 +43,26 @@ static inline int32_t mul_q15(int32_t a, int16_t b) {
 }
 
 /* ---------------------------------------------------------------------------
+ * Fixed-point log2 helper
+ *
+ * Returns floor(log2(x)) plus a fractional part in Q.LOG2_FRAC_BITS fixed
+ * point, or 0 for x <= 0.  __builtin_clz compiles to a single CLZ on the
+ * Cortex-M3; the fractional term linearly interpolates within each octave so
+ * the bar heights vary smoothly instead of jumping a whole pixel band per
+ * doubling of magnitude.
+ * ---------------------------------------------------------------------------
+ */
+#define LOG2_FRAC_BITS 4 /* fractional resolution within one octave (Q.4) */
+
+static inline int32_t log2_fixed(int32_t x) {
+    if (x <= 0)
+        return 0;
+    int e = 31 - __builtin_clz((uint32_t)x);                /* floor(log2(x)) */
+    int32_t frac = ((x - (1 << e)) << LOG2_FRAC_BITS) >> e; /* (x-2^e)/2^e    */
+    return ((int32_t)e << LOG2_FRAC_BITS) + frac;
+}
+
+/* ---------------------------------------------------------------------------
  * In-place bit-reversal permutation
  *
  * Uses the precomputed bit-reversal table from fft_tables.c.
@@ -85,7 +105,7 @@ void dsp_FFT(void) {
 
     /* Load and centre the time-domain samples. */
     for (int i = 0; i < PERIOD; i++) {
-        DSP_FFT_RESULT_RE[i] = (int32_t)src[i] - ADC_CENTER;
+        DSP_FFT_RESULT_RE[i] = (int32_t)(src[i] >> 4) - ADC_CENTER;
         DSP_FFT_RESULT_IM[i] = 0;
     }
 
@@ -269,12 +289,26 @@ void applyFilter(void) {
  * Algorithm:
  *   1. Magnitude per bin = |re| + |im|  (avoids expensive sqrt).
  *   2. Group PERIOD/2 bins into N_BARS averages (base = 4).
- *   3. Dynamically normalise the bar heights to [0, DISPLAY_HEIGHT].
+ *   3. Map each average to [0, DISPLAY_HEIGHT] with a fixed logarithmic
+ *      (dB-style) scale, so bar height tracks absolute amplitude rather than
+ *      being renormalised per frame.
  *
  * NOTE: applyFilter() must be called before this function if a non-trivial
  *       filter is active.
  * ---------------------------------------------------------------------------
  */
+/*
+ * BAR_LOG2_FLOOR is the zero-point of the dB scale: bar averages with a
+ * magnitude <= 2^BAR_LOG2_FLOOR render as an empty bar.  It must sit just
+ * above the FFT noise/leakage floor (dominated by the DC bin and Q15
+ * round-off), otherwise the log compression draws that noise as a tall
+ * baseline.  Measured floor with a grounded input is ~2^12, so 12 keeps the
+ * baseline empty while real signal still rises above it.  Each +1 lowers
+ * every bar by BAR_PX_PER_OCTAVE pixels; nudge to taste.
+ */
+#define BAR_LOG2_FLOOR    12 /* empty-bar threshold = 2^12 (≈ noise floor)     */
+#define BAR_PX_PER_OCTAVE 5  /* display pixels per doubling of magnitude        */
+
 void dsp_computeMagnitudeBars(uint8_t bars[N_BARS]) {
     int const nBins = PERIOD / 2;    /* bins 0..511 are unique */
     int const base = nBins / N_BARS; /* 512 / 128 = 4 */
@@ -299,21 +333,16 @@ void dsp_computeMagnitudeBars(uint8_t bars[N_BARS]) {
         barSums[bar] = sum / base;
     }
 
-    /* ---- Dynamic normalisation to [0, DISPLAY_HEIGHT] ---- */
-    int32_t maxAvg = 0;
+    /* ---- Fixed logarithmic mapping to [0, DISPLAY_HEIGHT] ---- */
     for (int bar = 0; bar < N_BARS; bar++) {
-        if (barSums[bar] > maxAvg) {
-            maxAvg = barSums[bar];
-        }
-    }
-
-    if (maxAvg > 0) {
-        for (int bar = 0; bar < N_BARS; bar++) {
-            uint8_t v = (uint8_t)((barSums[bar] * DISPLAY_HEIGHT) / maxAvg);
-            bars[bar] = (v > DISPLAY_HEIGHT) ? DISPLAY_HEIGHT : v;
-        }
-    } else {
-        memset(bars, 0, N_BARS * sizeof(uint8_t));
+        int32_t l = log2_fixed(barSums[bar]);
+        int32_t px =
+            ((l - (BAR_LOG2_FLOOR << LOG2_FRAC_BITS)) * BAR_PX_PER_OCTAVE) >> LOG2_FRAC_BITS;
+        if (px < 0)
+            px = 0;
+        if (px > DISPLAY_HEIGHT)
+            px = DISPLAY_HEIGHT;
+        bars[bar] = (uint8_t)px;
     }
 }
 

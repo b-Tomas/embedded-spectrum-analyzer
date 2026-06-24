@@ -143,7 +143,9 @@ void applyFilter(void);
  * Steps:
  *   1. Compute per-bin magnitude as abs(re) + abs(im) for bins 0..PERIOD/2-1.
  *   2. Average groups of (PERIOD/2 / N_BARS) bins into N_BARS bars.
- *   3. Dynamically normalise to [0, DISPLAY_HEIGHT].
+ *   3. Map to [0, DISPLAY_HEIGHT] with a fixed logarithmic (dB-style) scale,
+ *      so bar height tracks absolute amplitude rather than being renormalised
+ *      per frame.
  *
  * @param bars  Output array of length N_BARS, filled with display heights.
  */
